@@ -1243,3 +1243,103 @@ body {
         font-size: 16px;
     }
 }
+
+/* ============================================
+   PREMIUM SOHBET STYLES
+   ============================================ */
+
+.security-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin: 15px 0;
+}
+
+.badge {
+    background: rgba(78, 179, 245, 0.2);
+    color: #1a1a2e;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid rgba(78, 179, 245, 0.3);
+    transition: all 0.3s ease;
+}
+
+.badge:hover {
+    background: rgba(78, 179, 245, 0.3);
+    transform: translateY(-2px);
+}
+
+.security-box {
+    background: #e8f5e8;
+    padding: 15px;
+    border-radius: 15px;
+    margin-top: 15px;
+    border: 1px solid #4ade80;
+    width: 100%;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.security-box:hover {
+    background: #d4f4d4;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(74, 222, 128, 0.2);
+}
+
+.security-icons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 8px;
+}
+
+.security-icons span {
+    font-size: 20px;
+    animation: pulse 2s infinite;
+}
+
+.security-box p {
+    margin: 0;
+    font-size: 12px;
+    color: #166534;
+    font-weight: 600;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Mobile optimizations for new elements */
+@media (max-width: 480px) {
+    .security-badges {
+        gap: 6px;
+    }
+    
+    .badge {
+        font-size: 11px;
+        padding: 5px 10px;
+    }
+    
+    .security-box {
+        padding: 12px;
+    }
+    
+    .security-icons span {
+        font-size: 18px;
+    }
+    
+    .security-box p {
+        font-size: 11px;
+    }
+}
