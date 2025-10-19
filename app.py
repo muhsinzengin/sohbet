@@ -505,7 +505,11 @@ def upload_image():
 
     try:
         if cloudinary_configured:
-            result = cloudinary.uploader.upload(file, folder='chat_images')
+            # Orijinal kaliteyi koru - quality=100, format=auto, no compression
+            result = cloudinary.uploader.upload(file, folder='chat_images',
+                                              quality=100,
+                                              format='auto',
+                                              flags='lossy')
             return jsonify({'url': result['secure_url']})
         else:
             os.makedirs('uploads/images', exist_ok=True)
@@ -539,7 +543,12 @@ def upload_audio():
 
     try:
         if cloudinary_configured:
-            result = cloudinary.uploader.upload(file, folder='chat_audio', resource_type='video')
+            # Orijinal kaliteyi koru - quality=100, format=auto, no compression
+            result = cloudinary.uploader.upload(file, folder='chat_audio',
+                                              resource_type='video',
+                                              quality=100,
+                                              format='auto',
+                                              flags='lossy')
             return jsonify({'url': result['secure_url']})
         else:
             os.makedirs('uploads/audio', exist_ok=True)
