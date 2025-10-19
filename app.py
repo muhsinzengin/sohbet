@@ -4,19 +4,55 @@ import asyncio
 import random
 import logging
 import re
+import json
 from datetime import datetime, timedelta
+from collections import defaultdict
+from logging.handlers import RotatingFileHandler
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_socketio import SocketIO, emit, join_room
 from werkzeug.utils import secure_filename
 from config import Config
 from database import db
+from rate_limiter import rate_limit
+from cache import message_cache, cached_thread_messages
+from security import security_manager
 
-# Logging setup
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# Enhanced Logging Setup
+def setup_enhanced_logging():
+    # JSON format logging
+    class JSONFormatter(logging.Formatter):
+        def format(self, record):
+            log_entry = {
+                'timestamp': self.formatTime(record),
+                'level': record.levelname,
+                'message': record.getMessage(),
+                'module': record.module,
+                'function': record.funcName,
+                'line': record.lineno
+            }
+            # Add extra fields if available (safe attribute access)
+            if hasattr(record, 'user_id') and record.user_id:
+                log_entry['user_id'] = record.user_id
+            if hasattr(record, 'thread_id') and record.thread_id:
+                log_entry['thread_id'] = record.thread_id
+            if hasattr(record, 'endpoint') and record.endpoint:
+                log_entry['endpoint'] = record.endpoint
+            return json.dumps(log_entry)
+
+    # Setup handlers
+    os.makedirs('logs', exist_ok=True)
+    handler = RotatingFileHandler('logs/chat.log', maxBytes=10*1024*1024, backupCount=5)
+    handler.setFormatter(JSONFormatter())
+
+    # Add handler to logger
+    logger = logging.getLogger(__name__)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+
+    return logger
+
+# Initialize enhanced logging
+logger = setup_enhanced_logging()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = Config.SECRET_KEY
@@ -232,7 +268,8 @@ if Config.TELEGRAM_BOT_TOKEN:
             try:
                 logger.info('Telegram bot polling başlatılıyor...')
                 # PTB v20: run_polling yönetir (initialize/start/idling)
-                telegram_app.run_polling(stop_signals=None)
+                # Conflict hatasını önlemek için drop_pending_updates=True
+                telegram_app.run_polling(stop_signals=None, drop_pending_updates=True)
             except Exception as e:
                 logger.error(f'Telegram bot bağlantı hatası: {e}')
                 logger.info('30 saniye sonra yeniden bağlanmaya çalışılacak...')
@@ -359,6 +396,58 @@ def delete_otp_from_db(otp_code):
     except Exception as e:
         logger.error(f"OTP DB delete failed: {e}")
 
+# Global Error Handlers
+@app.errorhandler(Exception)
+def handle_global_error(error):
+    logger.error(f"Global error: {error}", exc_info=True)
+    return jsonify({
+        'success': False,
+        'error': 'Internal server error',
+        'code': 'INTERNAL_ERROR',
+        'timestamp': datetime.now().isoformat()
+    }), 500
+
+@app.errorhandler(404)
+def handle_not_found(error):
+    return jsonify({
+        'success': False,
+        'error': 'Endpoint not found',
+        'code': 'NOT_FOUND',
+        'timestamp': datetime.now().isoformat()
+    }), 404
+
+@app.errorhandler(429)
+def handle_rate_limit(error):
+    return jsonify({
+        'success': False,
+        'error': 'Too many requests',
+        'code': 'RATE_LIMIT_EXCEEDED',
+        'timestamp': datetime.now().isoformat()
+    }), 429
+
+# Standardized API Response Helper
+def api_response(success=True, data=None, error=None, code=None, status=200):
+    response = {
+        'success': success,
+        'timestamp': datetime.now().isoformat()
+    }
+    if success and data is not None:
+        response['data'] = data
+    if not success and error:
+        response['error'] = error
+        response['code'] = code or 'UNKNOWN_ERROR'
+    return jsonify(response), status
+
+# Socket.IO Error Handler
+@socketio.on_error_default
+def handle_socket_error(e):
+    logger.error(f"Socket.IO error: {e}")
+    emit('error', {
+        'type': 'socket_error',
+        'message': 'Connection error occurred',
+        'timestamp': datetime.now().isoformat()
+    })
+
 # Routes
 @app.route('/')
 def index():
@@ -463,43 +552,111 @@ def get_threads():
 @app.route('/api/messages')
 def get_messages():
     if not session.get('admin'):
-        return jsonify([]), 401
+        return api_response(success=False, error='Unauthorized', code='UNAUTHORIZED', status=401)
 
     thread_id = request.args.get('thread_id')
-    messages = db.execute_query(
-        'SELECT * FROM messages WHERE thread_id = ? ORDER BY created_at ASC',
-        (thread_id,)
-    )
+    if not thread_id:
+        return api_response(success=False, error='Thread ID required', code='MISSING_THREAD_ID', status=400)
 
-    # Decrypt text messages for admin view
-    for msg in messages:
-        if msg['content_text'] and msg['type'] == 'text':
-            try:
-                msg['content_text'] = decrypt_message(msg['content_text'], ENCRYPTION_KEY)
-            except Exception as e:
-                logger.warning(f"Failed to decrypt message {msg['id']}: {e}")
-                msg['content_text'] = "[Şifrelenmiş mesaj okunamıyor]"
+    # Pagination parameters
+    page = int(request.args.get('page', 1))
+    per_page = int(request.args.get('per_page', 50))
+    offset = (page - 1) * per_page
 
-    return jsonify(messages)
+    try:
+        # Try to get from cache first (only for first page)
+        if page == 1:
+            cached_messages = message_cache.get_thread_messages(thread_id, per_page)
+            if cached_messages:
+                # Get total count separately
+                total_result = db.execute_query(
+                    'SELECT COUNT(*) as count FROM messages WHERE thread_id = ?',
+                    (thread_id,),
+                    fetch='one'
+                )
+                total = total_result['count'] if total_result else 0
+
+                pagination_info = {
+                    'page': page,
+                    'per_page': per_page,
+                    'total': total,
+                    'pages': (total + per_page - 1) // per_page,
+                    'has_more': page < ((total + per_page - 1) // per_page),
+                    'cached': True
+                }
+
+                return api_response(data={
+                    'messages': cached_messages,
+                    'pagination': pagination_info
+                })
+
+        # Get total count
+        total_result = db.execute_query(
+            'SELECT COUNT(*) as count FROM messages WHERE thread_id = ?',
+            (thread_id,),
+            fetch='one'
+        )
+        total = total_result['count'] if total_result else 0
+
+        # Get paginated messages
+        messages = db.execute_query(
+            'SELECT * FROM messages WHERE thread_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?',
+            (thread_id, per_page, offset)
+        )
+
+        # Decrypt text messages for admin view
+        for msg in messages:
+            if msg['content_text'] and msg['type'] == 'text':
+                try:
+                    msg['content_text'] = decrypt_message(msg['content_text'], ENCRYPTION_KEY)
+                except Exception as e:
+                    logger.warning(f"Failed to decrypt message {msg['id']}: {e}")
+                    msg['content_text'] = "[Şifrelenmiş mesaj okunamıyor]"
+
+        # Reverse to show chronological order (oldest first)
+        messages.reverse()
+
+        # Cache first page messages
+        if page == 1:
+            message_cache.set_thread_messages(thread_id, messages, per_page)
+
+        pagination_info = {
+            'page': page,
+            'per_page': per_page,
+            'total': total,
+            'pages': (total + per_page - 1) // per_page,
+            'has_more': page < ((total + per_page - 1) // per_page),
+            'cached': False
+        }
+
+        return api_response(data={
+            'messages': messages,
+            'pagination': pagination_info
+        })
+
+    except Exception as e:
+        logger.error(f"Error fetching messages: {e}")
+        return api_response(success=False, error='Failed to fetch messages', code='FETCH_ERROR', status=500)
 
 @app.route('/api/upload/image', methods=['POST'])
+@rate_limit('upload')
 def upload_image():
     # Rate limiting kontrolü
     client_ip = request.remote_addr
     if not check_rate_limit(f"upload_{client_ip}", upload_rate_limit, max_requests=5, window_seconds=300):
-        return jsonify({'error': 'Çok fazla yükleme isteği. Lütfen 5 dakika bekleyin.'}), 429
+        return api_response(success=False, error='Çok fazla yükleme isteği. Lütfen 5 dakika bekleyin.', code='RATE_LIMIT_EXCEEDED', status=429)
 
     file = request.files.get('file')
     if not file:
-        return jsonify({'error': 'Dosya bulunamadı'}), 400
+        return api_response(success=False, error='Dosya bulunamadı', code='NO_FILE', status=400)
 
     # Content type validation
     if not file.content_type or not file.content_type.startswith('image/'):
-        return jsonify({'error': 'Geçersiz dosya tipi. Sadece resim dosyaları kabul edilir'}), 400
+        return api_response(success=False, error='Geçersiz dosya tipi. Sadece resim dosyaları kabul edilir', code='INVALID_FILE_TYPE', status=400)
 
     # File size limit (5MB)
     if file.content_length and file.content_length > 5 * 1024 * 1024:
-        return jsonify({'error': 'Dosya çok büyük. Maksimum 5MB'}), 400
+        return api_response(success=False, error='Dosya çok büyük. Maksimum 5MB', code='FILE_TOO_LARGE', status=400)
 
     try:
         if cloudinary_configured:
@@ -508,36 +665,41 @@ def upload_image():
                                               quality=100,
                                               format='auto',
                                               flags='lossy')
-            return jsonify({'url': result['secure_url']})
+            return api_response(data={'url': result['secure_url']})
         else:
             os.makedirs('uploads/images', exist_ok=True)
             filename = f"{uuid.uuid4()}_{secure_filename(file.filename or 'image.jpg')}"
             path = os.path.join('uploads/images', filename)
             file.save(path)
-            return jsonify({'url': f'/uploads/images/{filename}'})
+            return api_response(data={'url': f'/uploads/images/{filename}'})
     except Exception as e:
         logger.error(f'Image upload failed: {e}')
-        return jsonify({'error': f'Yükleme başarısız: {str(e)}'}), 500
+        return api_response(success=False, error='Yükleme başarısız', code='UPLOAD_FAILED', status=500)
+
+@app.errorhandler(405)
+def handle_method_not_allowed(error):
+    return api_response(success=False, error='Method not allowed', code='METHOD_NOT_ALLOWED', status=405)
 
 @app.route('/api/upload/audio', methods=['POST'])
+@rate_limit('upload')
 def upload_audio():
     # Rate limiting kontrolü
     client_ip = request.remote_addr
     if not check_rate_limit(f"upload_{client_ip}", upload_rate_limit, max_requests=3, window_seconds=300):
-        return jsonify({'error': 'Çok fazla yükleme isteği. Lütfen 5 dakika bekleyin.'}), 429
+        return api_response(success=False, error='Çok fazla yükleme isteği. Lütfen 5 dakika bekleyin.', code='RATE_LIMIT_EXCEEDED', status=429)
 
     file = request.files.get('file')
     if not file:
-        return jsonify({'error': 'Dosya bulunamadı'}), 400
+        return api_response(success=False, error='Dosya bulunamadı', code='NO_FILE', status=400)
 
     # Content type validation
     allowed_types = ['audio/webm', 'audio/ogg', 'audio/wav', 'audio/mp3', 'audio/mpeg']
     if not file.content_type or file.content_type not in allowed_types:
-        return jsonify({'error': 'Geçersiz dosya tipi. Sadece ses dosyaları kabul edilir'}), 400
+        return api_response(success=False, error='Geçersiz dosya tipi. Sadece ses dosyaları kabul edilir', code='INVALID_FILE_TYPE', status=400)
 
     # File size limit (10MB for audio)
     if file.content_length and file.content_length > 10 * 1024 * 1024:
-        return jsonify({'error': 'Dosya çok büyük. Maksimum 10MB'}), 400
+        return api_response(success=False, error='Dosya çok büyük. Maksimum 10MB', code='FILE_TOO_LARGE', status=400)
 
     try:
         if cloudinary_configured:
@@ -547,16 +709,16 @@ def upload_audio():
                                               quality=100,
                                               format='auto',
                                               flags='lossy')
-            return jsonify({'url': result['secure_url']})
+            return api_response(data={'url': result['secure_url']})
         else:
             os.makedirs('uploads/audio', exist_ok=True)
             filename = f"{uuid.uuid4()}_{secure_filename(file.filename or 'audio.webm')}"
             path = os.path.join('uploads/audio', filename)
             file.save(path)
-            return jsonify({'url': f'/uploads/audio/{filename}'})
+            return api_response(data={'url': f'/uploads/audio/{filename}'})
     except Exception as e:
         logger.error(f'Audio upload failed: {e}')
-        return jsonify({'error': f'Yükleme başarısız: {str(e)}'}), 500
+        return api_response(success=False, error='Yükleme başarısız', code='UPLOAD_FAILED', status=500)
 
 @app.route('/uploads/<folder>/<filename>')
 def serve_upload(folder, filename):
@@ -577,23 +739,34 @@ def serve_upload(folder, filename):
 @app.route('/api/messages/clear', methods=['POST'])
 def clear_thread():
     if not session.get('admin'):
-        return jsonify({'error': 'Unauthorized'}), 401
-    
+        return api_response(success=False, error='Unauthorized', code='UNAUTHORIZED', status=401)
+
     thread_id = request.args.get('thread_id')
-    db.execute_query('DELETE FROM messages WHERE thread_id = ?', (thread_id,), fetch=None)
-    db.execute_query('DELETE FROM telegram_links WHERE thread_id = ?', (thread_id,), fetch=None)
-    return jsonify({'success': True})
+    if not thread_id:
+        return api_response(success=False, error='Thread ID required', code='MISSING_THREAD_ID', status=400)
+
+    try:
+        db.execute_query('DELETE FROM messages WHERE thread_id = ?', (thread_id,), fetch=None)
+        db.execute_query('DELETE FROM telegram_links WHERE thread_id = ?', (thread_id,), fetch=None)
+        return api_response(data={'message': 'Thread cleared successfully'})
+    except Exception as e:
+        logger.error(f"Error clearing thread {thread_id}: {e}")
+        return api_response(success=False, error='Failed to clear thread', code='CLEAR_ERROR', status=500)
 
 @app.route('/api/messages/clear_all', methods=['POST'])
 def clear_all():
     if not session.get('admin'):
-        return jsonify({'error': 'Unauthorized'}), 401
+        return api_response(success=False, error='Unauthorized', code='UNAUTHORIZED', status=401)
 
-    db.execute_query('DELETE FROM messages', fetch=None)
-    db.execute_query('DELETE FROM threads', fetch=None)
-    db.execute_query('DELETE FROM telegram_links', fetch=None)
-    db.execute_query('DELETE FROM telegram_inbound', fetch=None)
-    return jsonify({'success': True})
+    try:
+        db.execute_query('DELETE FROM messages', fetch=None)
+        db.execute_query('DELETE FROM threads', fetch=None)
+        db.execute_query('DELETE FROM telegram_links', fetch=None)
+        db.execute_query('DELETE FROM telegram_inbound', fetch=None)
+        return api_response(data={'message': 'All data cleared successfully'})
+    except Exception as e:
+        logger.error(f"Error clearing all data: {e}")
+        return api_response(success=False, error='Failed to clear all data', code='CLEAR_ALL_ERROR', status=500)
 
 
 
@@ -650,7 +823,11 @@ def handle_heartbeat(data):
         emit('visitor_online', {'thread_id': thread_id}, room='admin_room')
 
 @socketio.on('message_to_admin')
+@rate_limit('message')
 def handle_message_to_admin(data):
+    # Input validation and sanitization
+    data = security_manager.validate_input(data)
+
     # Rate limiting kontrolü
     client_ip = request.remote_addr
     if not check_rate_limit(f"message_{client_ip}", message_rate_limit, max_requests=20, window_seconds=60):
@@ -683,6 +860,9 @@ def handle_message_to_admin(data):
             msg['content_text'] = decrypt_message(msg['content_text'], ENCRYPTION_KEY)
 
         emit('message_from_visitor', msg, room='admin_room')
+
+        # Invalidate cache for this thread
+        message_cache.invalidate_thread(thread_id)
 
         # Send notification to admin about new message
         thread = db.execute_query('SELECT display_name FROM threads WHERE id = ?', (thread_id,), fetch='one')
@@ -732,6 +912,9 @@ def handle_message_to_admin(data):
 
 @socketio.on('message_to_visitor')
 def handle_message_to_visitor(data):
+    # Input validation and sanitization
+    data = security_manager.validate_input(data)
+
     thread_id = data.get('thread_id')
     msg_type = data.get('type', 'text')
 
@@ -756,6 +939,9 @@ def handle_message_to_visitor(data):
 
         emit('message_from_admin', msg, room=thread_id)
         emit('message_from_telegram', msg, room='admin_room', include_self=False)
+
+        # Invalidate cache for this thread
+        message_cache.invalidate_thread(thread_id)
     except Exception as e:
         logger.error(f"Admin message save error: {e}")
         # DB hatası durumunda kullanıcıya bildir
@@ -774,6 +960,79 @@ def ensure_db_initialized():
             app._db_initialized = True
         except Exception as e:
             logger.error(f'DB init failed: {e}')
+
+# Metrics Collector Class
+class MetricsCollector:
+    def __init__(self):
+        self.metrics = defaultdict(list)
+        self.counters = defaultdict(int)
+
+    def record_response_time(self, endpoint, duration):
+        self.metrics[f'{endpoint}_response_time'].append(duration)
+
+    def increment_counter(self, name):
+        self.counters[name] += 1
+
+    def get_stats(self):
+        stats = {}
+        for key, values in self.metrics.items():
+            if values:
+                stats[key] = {
+                    'avg': sum(values) / len(values),
+                    'min': min(values),
+                    'max': max(values),
+                    'count': len(values)
+                }
+        stats.update(self.counters)
+        return stats
+
+metrics = MetricsCollector()
+
+# Health Check Endpoint
+@app.route('/health')
+def health_check():
+    health_status = {
+        'status': 'healthy',
+        'timestamp': datetime.now().isoformat(),
+        'version': '2.1',
+        'database': 'unknown',
+        'telegram': 'unknown'
+    }
+
+    # Database check
+    try:
+        db.execute_query('SELECT 1', fetch='one')
+        health_status['database'] = 'healthy'
+    except Exception as e:
+        health_status['database'] = 'unhealthy'
+        health_status['status'] = 'degraded'
+        logger.error(f'Database health check failed: {e}')
+
+    # Telegram check
+    if telegram_bot:
+        try:
+            # Simple bot check - just verify bot exists
+            health_status['telegram'] = 'healthy'
+        except Exception as e:
+            health_status['telegram'] = 'unhealthy'
+            health_status['status'] = 'degraded'
+            logger.error(f'Telegram health check failed: {e}')
+    else:
+        health_status['telegram'] = 'disabled'
+
+    # Add metrics
+    health_status['metrics'] = metrics.get_stats()
+
+    status_code = 200 if health_status['status'] == 'healthy' else 503
+    return api_response(data=health_status, status=status_code)
+
+# Admin Metrics Endpoint
+@app.route('/api/metrics')
+def get_metrics():
+    if not session.get('admin'):
+        return api_response(success=False, error='Unauthorized', code='UNAUTHORIZED', status=401)
+
+    return api_response(data=metrics.get_stats())
 
 if __name__ == '__main__':
     db.init_db()

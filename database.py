@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import threading
 from contextlib import contextmanager
 from datetime import datetime, timezone, timedelta
 from config import Config
@@ -10,6 +11,7 @@ TURKEY_TZ = timezone(timedelta(hours=3))
 try:
     import psycopg2
     import psycopg2.extras
+    import psycopg2.pool
 except ImportError:
     psycopg2 = None
 
@@ -20,21 +22,41 @@ class Database:
             self.database_url = self.database_url.replace('postgres://', 'postgresql://', 1)
         self.is_postgres = 'postgres' in self.database_url.lower()
         self.sqlite_path = Config.SQLITE_PATH
-        
+
+        # Connection pooling
+        self._pool = None
+        self._local = threading.local()
+
+        if self.is_postgres and psycopg2:
+            # PostgreSQL connection pool
+            self._pool = psycopg2.pool.ThreadedConnectionPool(
+                minconn=1,
+                maxconn=10,
+                dsn=self.database_url
+            )
+
+    def _get_sqlite_connection(self):
+        """SQLite için thread-local connection"""
+        if not hasattr(self._local, 'sqlite_conn'):
+            os.makedirs(os.path.dirname(self.sqlite_path), exist_ok=True)
+            self._local.sqlite_conn = sqlite3.connect(self.sqlite_path)
+            self._local.sqlite_conn.row_factory = sqlite3.Row
+            self._local.sqlite_conn.execute('PRAGMA foreign_keys = ON')
+        return self._local.sqlite_conn
+
     @contextmanager
     def get_connection(self):
-        if self.is_postgres:
-            conn = psycopg2.connect(self.database_url, cursor_factory=psycopg2.extras.RealDictCursor)
+        if self.is_postgres and self._pool and psycopg2:
+            conn = self._pool.getconn()
+            conn.cursor_factory = psycopg2.extras.RealDictCursor
+            try:
+                yield conn
+            finally:
+                self._pool.putconn(conn)
         else:
-            os.makedirs(os.path.dirname(self.sqlite_path), exist_ok=True)
-            conn = sqlite3.connect(self.sqlite_path)
-            conn.row_factory = sqlite3.Row
-            # Foreign keys aktif et
-            conn.execute('PRAGMA foreign_keys = ON')
-        try:
+            # SQLite için thread-local connection
+            conn = self._get_sqlite_connection()
             yield conn
-        finally:
-            conn.close()
     
     def execute_query(self, query, params=(), fetch='all'):
         query = query.replace('?', '%s') if self.is_postgres else query
