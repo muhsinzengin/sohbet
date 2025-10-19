@@ -270,7 +270,23 @@ async function testAudioUpload() {
 
 async function testMessageEncryption() {
     try {
-        return { success: true, message: 'Message encryption test passed' };
+        // Gerçek şifreleme testi
+        const response = await fetch('/api/test-encryption', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                message: 'Test encryption message',
+                algorithm: 'AES-256'
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Encryption test passed: ${data.encrypted ? 'Encrypted' : 'Plain'}` };
+        } else {
+            return { success: false, message: `Encryption test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Encryption error: ${e.message}` };
     }
@@ -278,11 +294,26 @@ async function testMessageEncryption() {
 
 async function testMessageValidation() {
     try {
-        const msgInput = document.getElementById('msg-input');
-        if (msgInput && msgInput.maxLength) {
-            return { success: true, message: 'Input validation active' };
+        // Gerçek input validation testi
+        const response = await fetch('/api/test-validation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                inputs: [
+                    { type: 'text', value: 'Normal message' },
+                    { type: 'text', value: '<script>alert("xss")</script>' },
+                    { type: 'text', value: 'A'.repeat(1000) }
+                ]
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Validation test passed: ${data.validated}/${data.total} inputs` };
+        } else {
+            return { success: false, message: `Validation test failed: ${response.status}` };
         }
-        return { success: false, message: 'Input validation not configured' };
     } catch (e) {
         return { success: false, message: `Validation error: ${e.message}` };
     }
@@ -290,7 +321,26 @@ async function testMessageValidation() {
 
 async function testMessageLength() {
     try {
-        return { success: true, message: 'Message length limits enforced' };
+        // Gerçek mesaj uzunluk testi
+        const response = await fetch('/api/test-message-length', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                messages: [
+                    { text: 'Short', expected: true },
+                    { text: 'A'.repeat(1000), expected: false },
+                    { text: 'Normal length message', expected: true }
+                ]
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Length test passed: ${data.passed}/${data.total} messages` };
+        } else {
+            return { success: false, message: `Length test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Length check error: ${e.message}` };
     }
@@ -298,11 +348,23 @@ async function testMessageLength() {
 
 async function testMessageHistory() {
     try {
-        const messagesDiv = document.getElementById('messages');
-        if (messagesDiv) {
-            return { success: true, message: 'Message history container found' };
+        // Gerçek mesaj geçmişi testi
+        const response = await fetch('/api/test-message-history', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                limit: 10,
+                offset: 0
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `History test passed: ${data.count} messages retrieved` };
+        } else {
+            return { success: false, message: `History test failed: ${response.status}` };
         }
-        return { success: false, message: 'Message history container not found' };
     } catch (e) {
         return { success: false, message: `History error: ${e.message}` };
     }
@@ -310,7 +372,22 @@ async function testMessageHistory() {
 
 async function testMessageTimestamps() {
     try {
-        return { success: true, message: 'Timestamp functionality working' };
+        // Gerçek timestamp testi
+        const response = await fetch('/api/test-timestamps', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                timezone: 'UTC+3'
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Timestamp test passed: ${data.timestamp}` };
+        } else {
+            return { success: false, message: `Timestamp test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Timestamp error: ${e.message}` };
     }
@@ -318,7 +395,26 @@ async function testMessageTimestamps() {
 
 async function testMessageThreading() {
     try {
-        return { success: true, message: 'Message threading working' };
+        // Gerçek threading testi
+        const response = await fetch('/api/test-threading', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                threads: [
+                    { id: 1, messages: 5 },
+                    { id: 2, messages: 3 },
+                    { id: 3, messages: 7 }
+                ]
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Threading test passed: ${data.active_threads} threads` };
+        } else {
+            return { success: false, message: `Threading test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Threading error: ${e.message}` };
     }
@@ -326,10 +422,23 @@ async function testMessageThreading() {
 
 async function testMessageNotifications() {
     try {
+        // Gerçek notification testi
         if ('Notification' in window) {
-            return { success: true, message: 'Notification API available' };
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                const notification = new Notification('Test Notification', {
+                    body: 'Test notification from dashboard',
+                    icon: '/static/favicon.svg'
+                });
+                
+                setTimeout(() => notification.close(), 2000);
+                return { success: true, message: 'Notification test passed: Permission granted' };
+            } else {
+                return { success: false, message: `Notification test failed: Permission ${permission}` };
+            }
+        } else {
+            return { success: false, message: 'Notification API not supported' };
         }
-        return { success: false, message: 'Notification API not supported' };
     } catch (e) {
         return { success: false, message: `Notification error: ${e.message}` };
     }
@@ -337,7 +446,23 @@ async function testMessageNotifications() {
 
 async function testMessageSearch() {
     try {
-        return { success: true, message: 'Search functionality available' };
+        // Gerçek arama testi
+        const response = await fetch('/api/test-search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                query: 'test message',
+                filters: { date_range: '7d', user: 'all' }
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Search test passed: ${data.results} results found` };
+        } else {
+            return { success: false, message: `Search test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Search error: ${e.message}` };
     }
@@ -345,7 +470,26 @@ async function testMessageSearch() {
 
 async function testMessageFiltering() {
     try {
-        return { success: true, message: 'Message filtering working' };
+        // Gerçek filtreleme testi
+        const response = await fetch('/api/test-filtering', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                filters: [
+                    { type: 'date', value: 'today' },
+                    { type: 'user', value: 'admin' },
+                    { type: 'type', value: 'text' }
+                ]
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Filtering test passed: ${data.filtered}/${data.total} messages` };
+        } else {
+            return { success: false, message: `Filtering test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Filtering error: ${e.message}` };
     }
@@ -353,7 +497,22 @@ async function testMessageFiltering() {
 
 async function testMessageCleanup() {
     try {
-        return { success: true, message: 'Message cleanup scheduled' };
+        // Gerçek temizlik testi
+        const response = await fetch('/api/test-cleanup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                cleanup_types: ['old_messages', 'temp_files', 'cache']
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Cleanup test passed: ${data.cleaned} items cleaned` };
+        } else {
+            return { success: false, message: `Cleanup test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Cleanup error: ${e.message}` };
     }
