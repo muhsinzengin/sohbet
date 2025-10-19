@@ -38,7 +38,7 @@ python app.py
 
 ### Railway (Önerilen)
 ```bash
-# Railway CLI kurulum
+# Railway CLI kurulum (opsiyonel)
 curl -fsSL https://railway.app/install.sh | sh
 
 # Login
@@ -61,8 +61,13 @@ railway variables set CLOUDINARY_API_SECRET=your_api_secret
 railway up
 ```
 
-### Vercel
-Vercel için `vercel.json` ve `api/app.py` hazır. Environment variables ekle ve deploy et.
+**Veya Web Interface ile:**
+1. https://railway.app → GitHub ile login
+2. "Deploy from GitHub repo" → `muhsinzengin/sohbet`
+3. Environment variables ekle
+4. Deploy et
+
+Detaylı rehber için `RAILWAY_DEPLOYMENT_GUIDE.md` dosyasına bakın.
 
 ## Güvenlik
 
