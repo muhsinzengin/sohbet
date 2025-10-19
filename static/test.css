@@ -109,7 +109,8 @@ table {
     border-collapse: collapse; 
     font-size: 12px; 
     overflow-x: auto; 
-    display: block; 
+    display: block;
+    table-layout: auto;
 }
 
 th, td { 
@@ -323,30 +324,37 @@ canvas {
     table { 
         font-size: 9px; 
         width: 100%;
-        table-layout: fixed;
+        table-layout: auto;
+        min-width: 280px;
     } 
     
     th, td { 
         padding: 3px 1px; 
         word-wrap: break-word;
+        white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        max-width: 60px;
     }
     
     th:first-child, td:first-child {
-        width: 20%;
+        width: auto;
+        min-width: 40px;
     }
     
     th:nth-child(2), td:nth-child(2) {
-        width: 15%;
+        width: auto;
+        min-width: 30px;
     }
     
     th:nth-child(3), td:nth-child(3) {
-        width: 20%;
+        width: auto;
+        min-width: 40px;
     }
     
     th:last-child, td:last-child {
-        width: 15%;
+        width: auto;
+        min-width: 30px;
     }
     
     .details-content {
@@ -389,10 +397,16 @@ canvas {
     
     table {
         font-size: 8px;
+        table-layout: auto;
+        min-width: 260px;
     }
     
     th, td {
         padding: 2px 1px;
+        max-width: 50px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     
     .card h3 {
