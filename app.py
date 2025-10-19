@@ -501,6 +501,10 @@ def handle_socket_error(e):
 def index():
     return render_template('index.html')
 
+@app.route('/static/assets/<path:filename>')
+def assets(filename):
+    return app.send_static_file(f'assets/{filename}')
+
 @app.route('/favicon.ico')
 def favicon():
     return app.send_static_file('favicon.svg')

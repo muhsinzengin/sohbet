@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#16213e;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f0f23;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="text" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00ff88;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00cc66;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  
+  <!-- Decorative circles -->
+  <circle cx="100" cy="100" r="50" fill="#00ff88" opacity="0.1"/>
+  <circle cx="1100" cy="150" r="80" fill="#00ff88" opacity="0.1"/>
+  <circle cx="200" cy="500" r="60" fill="#00ff88" opacity="0.1"/>
+  <circle cx="1000" cy="500" r="70" fill="#00ff88" opacity="0.1"/>
+  
+  <!-- Main chat bubble -->
+  <path d="M300 200c0-20 16-36 36-36h528c20 0 36 16 36 36v200c0 20-16 36-36 36h-132l-90 90v-90H336c-20 0-36-16-36-36V200z" fill="#00ff88"/>
+  
+  <!-- Message dots -->
+  <circle cx="450" cy="280" r="20" fill="#16213e"/>
+  <circle cx="550" cy="280" r="20" fill="#16213e"/>
+  <circle cx="650" cy="280" r="20" fill="#16213e"/>
+  
+  <!-- Main title -->
+  <text x="600" y="120" font-family="Arial, sans-serif" font-size="72" font-weight="bold" text-anchor="middle" fill="url(#text)">✨ Premium Sohbet</text>
+  
+  <!-- Subtitle -->
+  <text x="600" y="180" font-family="Arial, sans-serif" font-size="36" text-anchor="middle" fill="#ffffff">%100 Güvenli</text>
+  
+  <!-- Features -->
+  <text x="600" y="450" font-family="Arial, sans-serif" font-size="28" text-anchor="middle" fill="#ffffff">🔒 SSL • ✨ Premium • 🚀 Hızlı • 👨‍💼 7/24</text>
+  
+  <!-- Bottom text -->
+  <text x="600" y="520" font-family="Arial, sans-serif" font-size="24" text-anchor="middle" fill="#00ff88">Adınızı girin → Uzman desteğe anında bağlanın!</text>
+  
+  <!-- Security badges -->
+  <rect x="400" y="550" width="80" height="40" rx="20" fill="#00ff88" opacity="0.2"/>
+  <text x="440" y="575" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#00ff88">SSL</text>
+  
+  <rect x="500" y="550" width="100" height="40" rx="20" fill="#00ff88" opacity="0.2"/>
+  <text x="550" y="575" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#00ff88">Premium</text>
+  
+  <rect x="620" y="550" width="80" height="40" rx="20" fill="#00ff88" opacity="0.2"/>
+  <text x="660" y="575" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#00ff88">Hızlı</text>
+  
+  <rect x="720" y="550" width="80" height="40" rx="20" fill="#00ff88" opacity="0.2"/>
+  <text x="760" y="575" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#00ff88">7/24</text>
+</svg>
