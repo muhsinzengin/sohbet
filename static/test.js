@@ -121,45 +121,123 @@ function fallbackCopyTextToClipboard(text) {
 }
 
 // ============================================
-// REAL TEST FUNCTIONS (150 Tests)
+// REAL TEST FUNCTIONS (149 Tests) - %100 GERÇEK VERİ
 // ============================================
 
-// Message Tests (15)
+// Message Tests (15) - Gerçek Socket.IO Testleri
 async function testSocketConnection() {
     try {
-        if (typeof io !== 'undefined') {
-            return { success: true, message: 'Socket.IO library loaded' };
+        if (typeof io === 'undefined') {
+            return { success: false, message: 'Socket.IO library not loaded' };
         }
-        return { success: false, message: 'Socket.IO library not found' };
+        
+        // Gerçek bağlantı testi
+        const testSocket = io();
+        const connectionPromise = new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('Connection timeout')), 5000);
+            
+            testSocket.on('connect', () => {
+                clearTimeout(timeout);
+                testSocket.disconnect();
+                resolve(true);
+            });
+            
+            testSocket.on('connect_error', (error) => {
+                clearTimeout(timeout);
+                reject(error);
+            });
+        });
+        
+        await connectionPromise;
+        return { success: true, message: 'Socket.IO connection successful' };
     } catch (e) {
-        return { success: false, message: `Socket connection error: ${e.message}` };
+        return { success: false, message: `Socket connection failed: ${e.message}` };
     }
 }
 
 async function testMessageSend() {
     try {
-        const testMessage = { text: 'Test message', timestamp: Date.now() };
-        return { success: true, message: 'Message send test passed' };
+        if (!socket || !socket.connected) {
+            return { success: false, message: 'Socket not connected' };
+        }
+        
+        // Gerçek mesaj gönderme testi
+        const testMessage = {
+            text: 'Test message from dashboard',
+            timestamp: Date.now(),
+            type: 'test'
+        };
+        
+        const sendPromise = new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('Send timeout')), 3000);
+            
+            socket.emit('message_to_admin', testMessage, (response) => {
+                clearTimeout(timeout);
+                if (response && response.success) {
+                    resolve(response);
+                } else {
+                    reject(new Error(response?.message || 'Send failed'));
+                }
+            });
+        });
+        
+        await sendPromise;
+        return { success: true, message: 'Message sent successfully' };
     } catch (e) {
-        return { success: false, message: `Message send error: ${e.message}` };
+        return { success: false, message: `Message send failed: ${e.message}` };
     }
 }
 
 async function testMessageReceive() {
     try {
-        return { success: true, message: 'Message receive test passed' };
+        if (!socket || !socket.connected) {
+            return { success: false, message: 'Socket not connected' };
+        }
+        
+        // Gerçek mesaj alma testi
+        const receivePromise = new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('Receive timeout')), 5000);
+            
+            const messageHandler = (data) => {
+                clearTimeout(timeout);
+                socket.off('message_to_visitor', messageHandler);
+                resolve(data);
+            };
+            
+            socket.on('message_to_visitor', messageHandler);
+            
+            // Test mesajı gönder
+            socket.emit('message_to_admin', { text: 'Test receive', type: 'test' });
+        });
+        
+        await receivePromise;
+        return { success: true, message: 'Message receive working' };
     } catch (e) {
-        return { success: false, message: `Message receive error: ${e.message}` };
+        return { success: false, message: `Message receive failed: ${e.message}` };
     }
 }
 
 async function testImageUpload() {
     try {
-        const fileInput = document.getElementById('image-input');
-        if (fileInput) {
-            return { success: true, message: 'Image upload input available' };
+        // Gerçek dosya yükleme testi
+        const response = await fetch('/upload-image', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                test: true,
+                filename: 'test-image.jpg',
+                content: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/8A'
+            })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            return { success: true, message: `Image upload successful: ${result.url || 'Test passed'}` };
+        } else {
+            return { success: false, message: `Image upload failed: ${response.status}` };
         }
-        return { success: false, message: 'Image upload input not found' };
     } catch (e) {
         return { success: false, message: `Image upload error: ${e.message}` };
     }
@@ -167,15 +245,28 @@ async function testImageUpload() {
 
 async function testAudioUpload() {
     try {
-        const audioInput = document.getElementById('audio-input');
-        if (audioInput) {
-            return { success: true, message: 'Audio upload input available' };
+        // Gerçek ses dosyası yükleme testi
+        const response = await fetch('/upload-audio', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                test: true,
+                filename: 'test-audio.mp3',
+                content: 'data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAbgA'
+            })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            return { success: true, message: `Audio upload successful: ${result.url || 'Test passed'}` };
+        } else {
+            return { success: false, message: `Audio upload failed: ${response.status}` };
         }
-        return { success: false, message: 'Audio upload input not found' };
     } catch (e) {
         return { success: false, message: `Audio upload error: ${e.message}` };
     }
-}
 
 async function testMessageEncryption() {
     try {
@@ -268,14 +359,23 @@ async function testMessageCleanup() {
     }
 }
 
-// Database Tests (15)
+// Database Tests (14) - Gerçek Database API Testleri
 async function testDatabaseConnection() {
     try {
-        const response = await fetch('/api/health');
+        // Gerçek database bağlantı testi
+        const response = await fetch('/api/health', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
         if (response.ok) {
-            return { success: true, message: 'Database connection healthy' };
+            const data = await response.json();
+            return { success: true, message: `Database healthy: ${data.status || 'Connected'}` };
+        } else {
+            return { success: false, message: `Database connection failed: ${response.status}` };
         }
-        return { success: false, message: 'Database connection failed' };
     } catch (e) {
         return { success: false, message: `Database connection error: ${e.message}` };
     }
@@ -283,9 +383,109 @@ async function testDatabaseConnection() {
 
 async function testDatabaseQuery() {
     try {
-        return { success: true, message: 'Database queries working' };
+        // Gerçek database query testi
+        const response = await fetch('/api/test-db-query', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                query: 'SELECT COUNT(*) as count FROM messages',
+                test: true
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Query successful: ${data.result || 'Test passed'}` };
+        } else {
+            return { success: false, message: `Query failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Query error: ${e.message}` };
+    }
+}
+
+async function testDatabaseInsert() {
+    try {
+        // Gerçek database insert testi
+        const response = await fetch('/api/test-db-insert', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                table: 'test_messages',
+                data: {
+                    text: 'Test message from dashboard',
+                    timestamp: new Date().toISOString(),
+                    type: 'test'
+                },
+                test: true
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Insert successful: ID ${data.id || 'Test passed'}` };
+        } else {
+            return { success: false, message: `Insert failed: ${response.status}` };
+        }
+    } catch (e) {
+        return { success: false, message: `Insert error: ${e.message}` };
+    }
+}
+
+async function testDatabaseUpdate() {
+    try {
+        // Gerçek database update testi
+        const response = await fetch('/api/test-db-update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                table: 'test_messages',
+                where: { type: 'test' },
+                data: { updated_at: new Date().toISOString() },
+                test: true
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Update successful: ${data.affected || 'Test passed'}` };
+        } else {
+            return { success: false, message: `Update failed: ${response.status}` };
+        }
+    } catch (e) {
+        return { success: false, message: `Update error: ${e.message}` };
+    }
+}
+
+async function testDatabaseDelete() {
+    try {
+        // Gerçek database delete testi
+        const response = await fetch('/api/test-db-delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                table: 'test_messages',
+                where: { type: 'test' },
+                test: true
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Delete successful: ${data.deleted || 'Test passed'}` };
+        } else {
+            return { success: false, message: `Delete failed: ${response.status}` };
+        }
+    } catch (e) {
+        return { success: false, message: `Delete error: ${e.message}` };
     }
 }
 
@@ -1834,10 +2034,45 @@ async function runAutoRepair() {
 }
 
 // Repair functions
+// ============================================
+// REPAIR FUNCTIONS - %100 GERÇEK TAMİR YETİSİ
+// ============================================
+
 async function repairDatabase() {
     try {
-        const response = await fetch('/repair_db');
-        if (!response.ok) throw new Error('Database repair failed');
+        // Gerçek database repair işlemleri
+        const repairSteps = [
+            { name: 'VACUUM', endpoint: '/repair_db_vacuum' },
+            { name: 'Clean Old Messages', endpoint: '/repair_db_cleanup' },
+            { name: 'Optimize Indexes', endpoint: '/repair_db_indexes' },
+            { name: 'Check Integrity', endpoint: '/repair_db_integrity' }
+        ];
+        
+        let successCount = 0;
+        for (const step of repairSteps) {
+            try {
+                const response = await fetch(step.endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ repair: true })
+                });
+                
+                if (response.ok) {
+                    successCount++;
+                    addLog('success', `Database ${step.name}: Success`);
+                } else {
+                    addLog('warning', `Database ${step.name}: Failed`);
+                }
+            } catch (e) {
+                addLog('error', `Database ${step.name}: ${e.message}`);
+            }
+        }
+        
+        if (successCount === 0) {
+            throw new Error('All database repair steps failed');
+        }
+        
+        return { success: true, message: `${successCount}/${repairSteps.length} database repairs successful` };
     } catch (e) {
         throw new Error(`Database repair error: ${e.message}`);
     }
@@ -1845,8 +2080,38 @@ async function repairDatabase() {
 
 async function repairOTP() {
     try {
-        const response = await fetch('/repair_otp');
-        if (!response.ok) throw new Error('OTP repair failed');
+        // Gerçek OTP repair işlemleri
+        const repairSteps = [
+            { name: 'Clear Expired OTPs', endpoint: '/repair_otp_clear' },
+            { name: 'Reset OTP Counter', endpoint: '/repair_otp_reset' },
+            { name: 'Test OTP Generation', endpoint: '/repair_otp_test' }
+        ];
+        
+        let successCount = 0;
+        for (const step of repairSteps) {
+            try {
+                const response = await fetch(step.endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ repair: true })
+                });
+                
+                if (response.ok) {
+                    successCount++;
+                    addLog('success', `OTP ${step.name}: Success`);
+                } else {
+                    addLog('warning', `OTP ${step.name}: Failed`);
+                }
+            } catch (e) {
+                addLog('error', `OTP ${step.name}: ${e.message}`);
+            }
+        }
+        
+        if (successCount === 0) {
+            throw new Error('All OTP repair steps failed');
+        }
+        
+        return { success: true, message: `${successCount}/${repairSteps.length} OTP repairs successful` };
     } catch (e) {
         throw new Error(`OTP repair error: ${e.message}`);
     }
@@ -1854,8 +2119,38 @@ async function repairOTP() {
 
 async function repairTelegram() {
     try {
-        const response = await fetch('/repair_telegram');
-        if (!response.ok) throw new Error('Telegram repair failed');
+        // Gerçek Telegram repair işlemleri
+        const repairSteps = [
+            { name: 'Test Bot Connection', endpoint: '/repair_telegram_test' },
+            { name: 'Reset Webhook', endpoint: '/repair_telegram_webhook' },
+            { name: 'Clear Bot Cache', endpoint: '/repair_telegram_cache' }
+        ];
+        
+        let successCount = 0;
+        for (const step of repairSteps) {
+            try {
+                const response = await fetch(step.endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ repair: true })
+                });
+                
+                if (response.ok) {
+                    successCount++;
+                    addLog('success', `Telegram ${step.name}: Success`);
+                } else {
+                    addLog('warning', `Telegram ${step.name}: Failed`);
+                }
+            } catch (e) {
+                addLog('error', `Telegram ${step.name}: ${e.message}`);
+            }
+        }
+        
+        if (successCount === 0) {
+            throw new Error('All Telegram repair steps failed');
+        }
+        
+        return { success: true, message: `${successCount}/${repairSteps.length} Telegram repairs successful` };
     } catch (e) {
         throw new Error(`Telegram repair error: ${e.message}`);
     }
@@ -1863,9 +2158,37 @@ async function repairTelegram() {
 
 async function repairSocket() {
     try {
+        // Gerçek Socket.IO repair işlemleri
         if (socket) {
+            // Mevcut bağlantıyı kapat
             socket.disconnect();
+            addLog('info', 'Socket disconnected for repair');
+            
+            // Yeni bağlantı kur
+            await new Promise(resolve => setTimeout(resolve, 1000));
             socket.connect();
+            
+            // Bağlantı testi
+            const connectionPromise = new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => reject(new Error('Connection timeout')), 5000);
+                
+                socket.on('connect', () => {
+                    clearTimeout(timeout);
+                    resolve(true);
+                });
+                
+                socket.on('connect_error', (error) => {
+                    clearTimeout(timeout);
+                    reject(error);
+                });
+            });
+            
+            await connectionPromise;
+            addLog('success', 'Socket reconnected successfully');
+            
+            return { success: true, message: 'Socket.IO reconnected successfully' };
+        } else {
+            throw new Error('Socket not available');
         }
     } catch (e) {
         throw new Error(`Socket repair error: ${e.message}`);
@@ -1874,13 +2197,46 @@ async function repairSocket() {
 
 async function repairCloudinary() {
     try {
-        // Clear any cached images
+        // Gerçek Cloudinary repair işlemleri
+        const repairSteps = [
+            { name: 'Test Upload', endpoint: '/repair_cloudinary_test' },
+            { name: 'Clear Cache', endpoint: '/repair_cloudinary_cache' },
+            { name: 'Reset Config', endpoint: '/repair_cloudinary_config' }
+        ];
+        
+        let successCount = 0;
+        for (const step of repairSteps) {
+            try {
+                const response = await fetch(step.endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ repair: true })
+                });
+                
+                if (response.ok) {
+                    successCount++;
+                    addLog('success', `Cloudinary ${step.name}: Success`);
+                } else {
+                    addLog('warning', `Cloudinary ${step.name}: Failed`);
+                }
+            } catch (e) {
+                addLog('error', `Cloudinary ${step.name}: ${e.message}`);
+            }
+        }
+        
+        // Frontend cache temizleme
         const images = document.querySelectorAll('img');
         images.forEach(img => {
             if (img.src.includes('cloudinary')) {
                 img.src = img.src + '?t=' + Date.now();
             }
         });
+        
+        if (successCount === 0) {
+            throw new Error('All Cloudinary repair steps failed');
+        }
+        
+        return { success: true, message: `${successCount}/${repairSteps.length} Cloudinary repairs successful` };
     } catch (e) {
         throw new Error(`Cloudinary repair error: ${e.message}`);
     }
