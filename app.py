@@ -527,46 +527,57 @@ def login():
 
 @app.route('/request-otp', methods=['POST'])
 def request_otp():
-    # Token validasyonu
-    if not Config.TELEGRAM_BOT_TOKEN:
-        return jsonify({'success': False, 'message': 'Telegram bot token bulunamadı'}), 500
+    try:
+        otp = str(random.randint(100000, 999999))
+        expires_at = (datetime.now() + timedelta(minutes=5)).strftime('%Y-%m-%d %H:%M:%S')
 
-    if not Config.TELEGRAM_CHAT_ID:
-        return jsonify({'success': False, 'message': 'Telegram chat ID bulunamadı'}), 500
+        # OTP'yi database'e kaydet
+        if not save_otp_to_db(otp, expires_at):
+            logger.error("OTP database'e kaydedilemedi")
+            return jsonify({'success': False, 'message': 'OTP kaydedilemedi'}), 500
 
-    otp = str(random.randint(100000, 999999))
-    expires_at = (datetime.now() + timedelta(minutes=5)).strftime('%Y-%m-%d %H:%M:%S')
+        # Telegram bot kontrolü ve mesaj gönderimi
+        telegram_sent = False
+        if Config.TELEGRAM_BOT_TOKEN and Config.TELEGRAM_CHAT_ID and telegram_bot and telegram_loop:
+            try:
+                async def send_otp():
+                    await send_telegram_with_retry(
+                        Config.TELEGRAM_CHAT_ID,
+                        f"🔐 Admin OTP Kodu: {otp}\n\n⏰ 5 dakika geçerli"
+                    )
+                
+                future = asyncio.run_coroutine_threadsafe(send_otp(), telegram_loop)
 
-    # OTP'yi database'e kaydet
-    if not save_otp_to_db(otp, expires_at):
-        logger.error("OTP database'e kaydedilemedi")
-        return jsonify({'success': False, 'message': 'OTP kaydedilemedi'}), 500
+                def handle_result(fut):
+                    try:
+                        fut.result()
+                        logger.info("OTP Telegram'a başarıyla gönderildi")
+                    except Exception as e:
+                        logger.error(f'OTP Telegram gönderimi başarısız: {e}')
 
-    if telegram_bot and Config.TELEGRAM_CHAT_ID and telegram_loop:
-        try:
-            async def send_otp():
-                await send_telegram_with_retry(
-                    Config.TELEGRAM_CHAT_ID,
-                    f"🔐 Admin OTP Kodu: {otp}\n\n⏰ 5 dakika geçerli"
-                )
-            future = asyncio.run_coroutine_threadsafe(send_otp(), telegram_loop)
+                future.add_done_callback(handle_result)
+                telegram_sent = True
+                
+            except Exception as e:
+                logger.error(f'Telegram error: {e}')
 
-            # Future'ın sonucunu kontrol et
-            def handle_result(fut):
-                try:
-                    fut.result()  # Hata varsa exception raise eder
-                    logger.info("OTP Telegram'a başarıyla gönderildi")
-                except Exception as e:
-                    logger.error(f'OTP Telegram gönderimi başarısız: {e}')
+        # Response döndür
+        if telegram_sent:
+            return jsonify({
+                'success': True, 
+                'message': "OTP kodu Telegram'a gönderildi. Lütfen Telegram'ınızı kontrol edin.",
+                'otp': otp  # Debug için
+            })
+        else:
+            return jsonify({
+                'success': True, 
+                'message': f'OTP kodu oluşturuldu: {otp}',
+                'otp': otp
+            })
 
-            future.add_done_callback(handle_result)
-            return jsonify({'success': True, 'message': "OTP Telegram'a gönderildi"})
-        except Exception as e:
-            logger.error(f'Telegram error: {e}')
-            return jsonify({'success': True, 'otp': otp, 'message': f'Test OTP: {otp}'})
-    else:
-        # Development mode - show OTP in response
-        return jsonify({'success': True, 'otp': otp, 'message': f'Test OTP: {otp}'})
+    except Exception as e:
+        logger.error(f"OTP request genel hatası: {e}")
+        return jsonify({'success': False, 'message': f'Sistem hatası: {str(e)}'}), 500
 
 @app.route('/verify-otp', methods=['POST'])
 def verify_otp():
