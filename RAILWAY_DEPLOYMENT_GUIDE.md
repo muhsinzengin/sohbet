@@ -66,7 +66,7 @@ CORS_ORIGINS=https://your-app-name.railway.app
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT app:app"
+    "startCommand": "gunicorn --worker-class gevent -w 1 --bind 0.0.0.0:$PORT app:app"
   }
 }
 ```
@@ -79,7 +79,8 @@ python-dotenv==1.0.0
 python-telegram-bot==21.0
 cloudinary==1.36.0
 gunicorn==21.2.0
-eventlet==0.33.3
+gevent==23.9.1
+eventlet==0.35.2
 psycopg2-binary==2.9.9
 cryptography==46.0.3
 bleach==6.1.0
