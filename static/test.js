@@ -1552,7 +1552,7 @@ async function runAllTests() {
         }
     }
     
-    addLog('info', `Total tests to run: ${totalTests}`);
+    addLog('info', `Total tests to run: ${totalTests} (Messages:15, Database:14, Telegram:15, Socket:15, Cloudinary:15, Security:15, Performance:15, UI:15, Mobile:15, Railway:15)`);
     
     // Reset results
     testResults = {
@@ -1928,6 +1928,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     addLog('info', `Test dashboard initialized with ${totalTests} total tests`);
+    addLog('info', `Test breakdown: Messages(15), Database(14), Telegram(15), Socket(15), Cloudinary(15), Security(15), Performance(15), UI(15), Mobile(15), Railway(15)`);
     
     // Initialize chart
     updateChart();
