@@ -1,0 +1,51 @@
+# Render.com Deployment Configuration for Flask Chat v2.3
+# GitHub Repository: https://github.com/muhsinzengin/sohbet
+
+services:
+  # Main Flask Application
+  - type: web
+    name: flask-chat-app
+    env: python
+    plan: free  # Free plan for testing
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT app:app
+    envVars:
+      - key: SECRET_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false  # Set manually in Render dashboard
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false  # Set manually in Render dashboard
+      - key: TELEGRAM_CHAT_ID
+        sync: false  # Set manually in Render dashboard
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false  # Set manually in Render dashboard
+      - key: CLOUDINARY_API_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: CLOUDINARY_API_SECRET
+        sync: false  # Set manually in Render dashboard
+      - key: CLOUDINARY_URL
+        sync: false  # Set manually in Render dashboard
+      - key: CORS_ORIGINS
+        value: https://flask-chat-app.onrender.com
+    healthCheckPath: /health
+    autoDeploy: true
+    branch: master
+
+  # PostgreSQL Database
+  - type: pserv
+    name: flask-chat-db
+    plan: free  # Free plan for testing
+    databaseName: flask_chat
+    databaseUser: flask_chat_user
+    maxConnections: 20
+    autoDeploy: true
+    branch: master
+
+databases:
+  - name: flask-chat-db
+    plan: free
+    databaseName: flask_chat
+    databaseUser: flask_chat_user

@@ -2,7 +2,7 @@
 
 **GitHub Repository:** https://github.com/muhsinzengin/sohbet  
 **Template:** Web Service + PostgreSQL Database  
-**Plan:** Starter ($7/month each = $14/month total)
+**Plan:** Free (Test) / Starter ($7/month)
 
 ---
 
@@ -19,12 +19,12 @@
 - **Environment:** `Python 3`
 - **Build Command:** `pip install -r requirements.txt`
 - **Start Command:** `gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT app:app`
-- **Plan:** `Starter` ($7/month)
+- **Plan:** `Free` (Test için) / `Starter` ($7/month)
 
 ### **3. PostgreSQL Database Oluştur**
 - **Service Type:** `PostgreSQL`
 - **Name:** `flask-chat-db`
-- **Plan:** `Starter` ($7/month)
+- **Plan:** `Free` (Test için) / `Starter` ($7/month)
 - **Database Name:** `flask_chat`
 - **User:** `flask_chat_user`
 
@@ -101,15 +101,16 @@ curl https://flask-chat-app.onrender.com/health
 
 ## 💰 **MALIYET**
 
-**Starter Plan:**
+**Free Plan (Test için):**
+- **Web Service:** 750 saat/ay (yaklaşık 30 gün)
+- **PostgreSQL:** 1GB storage
+- **Toplam:** $0/month
+- **Uyarı:** Free plan'da uygulama 15 dakika idle sonra sleep'e geçer
+
+**Starter Plan (Production):**
 - **Web Service:** $7/month (512MB RAM)
 - **PostgreSQL:** $7/month (1GB storage)
 - **Toplam:** $14/month
-
-**Free Plan (Test için):**
-- Web Service: 750 saat/ay (yaklaşık 30 gün)
-- PostgreSQL: 1GB storage
-- **Uyarı:** Free plan'da uygulama 15 dakika idle sonra sleep'e geçer
 
 ---
 
@@ -133,6 +134,6 @@ curl https://flask-chat-app.onrender.com/health
 6. ✅ Deploy et ve test et
 
 **Toplam Süre:** 10-15 dakika  
-**Maliyet:** $14/month (Starter plan)
+**Maliyet:** $0/month (Free plan) / $14/month (Starter plan)
 
 **Render deployment hazır!** 🚀✨
