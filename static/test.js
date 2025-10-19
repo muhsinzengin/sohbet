@@ -68,6 +68,58 @@ function clearLogs() {
     `;
 }
 
+function copyLogs() {
+    const logsContainer = document.getElementById('logsContainer');
+    const logEntries = logsContainer.querySelectorAll('.log-entry');
+    
+    let logsText = `🔍 FLASK CHAT v2.3 - TEST LOGS\n📅 ${new Date().toLocaleString()}\n\n`;
+    
+    logEntries.forEach(entry => {
+        const time = entry.querySelector('.log-time').textContent;
+        const level = entry.querySelector('.log-level').textContent;
+        const message = entry.querySelector('.log-message').textContent;
+        logsText += `${time} ${level} ${message}\n`;
+    });
+    
+    // Clipboard API kullan
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(logsText).then(() => {
+            addLog('success', 'Logs copied to clipboard!');
+        }).catch(err => {
+            console.error('Clipboard error:', err);
+            fallbackCopyTextToClipboard(logsText);
+        });
+    } else {
+        fallbackCopyTextToClipboard(logsText);
+    }
+}
+
+function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+    textArea.style.opacity = "0";
+    
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+            addLog('success', 'Logs copied to clipboard!');
+        } else {
+            addLog('error', 'Failed to copy logs');
+        }
+    } catch (err) {
+        addLog('error', 'Failed to copy logs: ' + err.message);
+    }
+    
+    document.body.removeChild(textArea);
+}
+
 // ============================================
 // REAL TEST FUNCTIONS (150 Tests)
 // ============================================
@@ -1919,8 +1971,33 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update total display
         const totalElement = document.getElementById(`${category}Total`);
+        console.log(`Setting ${category}Total to ${tests.length}`, totalElement);
         if (totalElement) {
             totalElement.textContent = tests.length;
+        } else {
+            console.error(`Element ${category}Total not found!`);
+        }
+    }
+    
+    // Manual fallback for test counts
+    const manualCounts = {
+        'msgTotal': 15,
+        'dbTotal': 14, 
+        'tgTotal': 15,
+        'socketTotal': 15,
+        'cloudTotal': 15,
+        'secTotal': 15,
+        'perfTotal': 15,
+        'uiTotal': 15,
+        'mobileTotal': 15,
+        'railwayTotal': 15
+    };
+    
+    for (const [id, count] of Object.entries(manualCounts)) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = count;
+            console.log(`Manual set ${id} to ${count}`);
         }
     }
     

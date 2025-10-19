@@ -995,3 +995,27 @@ canvas {
 .log-entry.success .log-level {
     color: #00ff88;
 }
+
+.logs-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.copy-logs-btn {
+    background: #00aaff;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.copy-logs-btn:hover {
+    background: #0088cc;
+}
+
+.copy-logs-btn:active {
+    background: #006699;
+}

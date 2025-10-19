@@ -336,7 +336,10 @@
     <div class="logs-section">
         <div class="logs-header">
             <h3>📋 Error Logs</h3>
-            <button class="clear-logs-btn" onclick="clearLogs()">🗑️ Clear</button>
+            <div class="logs-buttons">
+                <button class="copy-logs-btn" onclick="copyLogs()">📋 Copy</button>
+                <button class="clear-logs-btn" onclick="clearLogs()">🗑️ Clear</button>
+            </div>
         </div>
         <div class="logs-container" id="logsContainer">
             <div class="log-entry info">
