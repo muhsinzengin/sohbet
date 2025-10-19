@@ -52,3 +52,25 @@
 {"timestamp": "2025-10-19 17:05:18,954", "level": "INFO", "message": "Database initialized", "module": "app", "function": "<module>", "line": 1039}
 {"timestamp": "2025-10-19 17:05:18,954", "level": "INFO", "message": "Server starting on http://localhost:5000", "module": "app", "function": "<module>", "line": 1040}
 {"timestamp": "2025-10-19 17:05:28,490", "level": "INFO", "message": "Database initialized (before_request)", "module": "app", "function": "ensure_db_initialized", "line": 959}
+{"timestamp": "2025-10-19 17:10:43,480", "level": "ERROR", "message": "Message save error: FOREIGN KEY constraint failed", "module": "app", "function": "handle_message_to_admin", "line": 906}
+{"timestamp": "2025-10-19 17:45:42,131", "level": "INFO", "message": "Telegram bot started with reconnect capability", "module": "app", "function": "<module>", "line": 286}
+{"timestamp": "2025-10-19 17:45:42,133", "level": "INFO", "message": "Telegram bot polling ba\u015flat\u0131l\u0131yor...", "module": "app", "function": "start_telegram_bot", "line": 269}
+{"timestamp": "2025-10-19 17:45:42,173", "level": "INFO", "message": "Database initialized", "module": "app", "function": "<module>", "line": 1039}
+{"timestamp": "2025-10-19 17:45:42,173", "level": "INFO", "message": "Server starting on port 5000 (debug=True)", "module": "app", "function": "<module>", "line": 1045}
+{"timestamp": "2025-10-19 17:45:56,543", "level": "INFO", "message": "Telegram bot started with reconnect capability", "module": "app", "function": "<module>", "line": 288}
+{"timestamp": "2025-10-19 17:45:56,544", "level": "INFO", "message": "Telegram bot polling ba\u015flat\u0131l\u0131yor...", "module": "app", "function": "start_telegram_bot", "line": 271}
+{"timestamp": "2025-10-19 17:45:56,589", "level": "INFO", "message": "Database initialized", "module": "app", "function": "<module>", "line": 1041}
+{"timestamp": "2025-10-19 17:45:56,589", "level": "INFO", "message": "Server starting on port 5000 (debug=True)", "module": "app", "function": "<module>", "line": 1047}
+{"timestamp": "2025-10-19 17:45:58,318", "level": "INFO", "message": "Database initialized (before_request)", "module": "app", "function": "ensure_db_initialized", "line": 961}
+{"timestamp": "2025-10-19 17:46:10,876", "level": "INFO", "message": "Telegram bot started with reconnect capability", "module": "app", "function": "<module>", "line": 288}
+{"timestamp": "2025-10-19 17:46:10,876", "level": "INFO", "message": "Telegram bot polling ba\u015flat\u0131l\u0131yor...", "module": "app", "function": "start_telegram_bot", "line": 271}
+{"timestamp": "2025-10-19 17:46:10,916", "level": "INFO", "message": "Database initialized", "module": "app", "function": "<module>", "line": 1041}
+{"timestamp": "2025-10-19 17:46:10,917", "level": "INFO", "message": "Server starting on port 5000 (debug=True)", "module": "app", "function": "<module>", "line": 1047}
+{"timestamp": "2025-10-19 17:46:26,291", "level": "INFO", "message": "Telegram bot started with reconnect capability", "module": "app", "function": "<module>", "line": 289}
+{"timestamp": "2025-10-19 17:46:26,292", "level": "INFO", "message": "Telegram bot polling ba\u015flat\u0131l\u0131yor...", "module": "app", "function": "start_telegram_bot", "line": 272}
+{"timestamp": "2025-10-19 17:46:26,345", "level": "INFO", "message": "Database initialized", "module": "app", "function": "<module>", "line": 1042}
+{"timestamp": "2025-10-19 17:46:26,345", "level": "INFO", "message": "Server starting on port 5000 (debug=True)", "module": "app", "function": "<module>", "line": 1048}
+{"timestamp": "2025-10-19 19:15:54,994", "level": "INFO", "message": "Telegram bot disabled (no token)", "module": "app", "function": "<module>", "line": 316, "environment": "development"}
+{"timestamp": "2025-10-19 19:16:23,782", "level": "INFO", "message": "Telegram bot disabled (no token)", "module": "app", "function": "<module>", "line": 316, "environment": "development"}
+{"timestamp": "2025-10-19 19:16:23,838", "level": "INFO", "message": "Database initialized", "module": "app", "function": "<module>", "line": 1325, "environment": "development"}
+{"timestamp": "2025-10-19 19:16:23,838", "level": "INFO", "message": "Server starting on port 5000 (debug=True)", "module": "app", "function": "<module>", "line": 1331, "environment": "development"}

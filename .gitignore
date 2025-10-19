@@ -11,6 +11,7 @@ data/
 uploads/
 *.db
 .DS_Store
+logs/
 
 # SYSTEM_DOCS klasörünü KORUMA ALTINA AL
 # !SYSTEM_DOCS/

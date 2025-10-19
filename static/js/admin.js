@@ -1,4 +1,24 @@
-// Socket.IO with production-ready configuration
+// ============================================
+// SECURITY UTILITIES
+// ============================================
+function escapeHtml(text) {
+    if (!text) return '';
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+        .replace(/\//g, '&#x2F;');
+}
+
+function safeSetTextContent(element, text) {
+    if (element && text !== null && text !== undefined) {
+        element.textContent = text;
+    }
+}
+
+// Socket.IO with production-ready configuration + CSRF protection
 const socket = io({
     transports: ['websocket', 'polling'],  // Support both transports
     reconnection: true,
@@ -6,8 +26,17 @@ const socket = io({
     reconnectionAttempts: 10,  // Increased for cold starts
     timeout: 30000,  // 30 seconds for cold start
     upgrade: true,
-    rememberUpgrade: true
+    rememberUpgrade: true,
+    extraHeaders: {
+        'X-CSRFToken': getCsrfToken()
+    }
 });
+
+// CSRF token alma fonksiyonu
+function getCsrfToken() {
+    const token = document.querySelector('meta[name=csrf-token]');
+    return token ? token.getAttribute('content') : '';
+}
 
 let currentThreadId = null;
 let isRecording = false;
@@ -235,22 +264,60 @@ async function loadThreads() {
             }
         }
         
-        div.innerHTML = `
-            <div class="status-dot ${isOnline ? 'online' : 'offline'}"></div>
-            <div class="thread-content">
-                <div class="thread-row">
-                    <div class="thread-name">${thread.display_name}</div>
-                    ${agoText ? `<div class="thread-ago ${timeClass}">${agoText}</div>` : ''}
-                </div>
-                <div class="thread-row">
-                    <div class="thread-preview">${thread.last_message || 'Mesaj yok'}</div>
-                    <div class="thread-date-time">
-                        <span class="thread-date ${dateClass}">${dateText}</span>
-                        ${timeText ? `<span class="thread-time ${timeClass2}">${timeText}</span>` : ''}
-                    </div>
-                </div>
-            </div>
-        `;
+        // Create elements safely to prevent XSS
+        const statusDot = document.createElement('div');
+        statusDot.className = `status-dot ${isOnline ? 'online' : 'offline'}`;
+        
+        const threadContent = document.createElement('div');
+        threadContent.className = 'thread-content';
+        
+        const threadRow1 = document.createElement('div');
+        threadRow1.className = 'thread-row';
+        
+        const threadName = document.createElement('div');
+        threadName.className = 'thread-name';
+        threadName.textContent = thread.display_name; // Safe text content
+        
+        const threadRow2 = document.createElement('div');
+        threadRow2.className = 'thread-row';
+        
+        const threadPreview = document.createElement('div');
+        threadPreview.className = 'thread-preview';
+        threadPreview.textContent = thread.last_message || 'Mesaj yok'; // Safe text content
+        
+        const dateTimeDiv = document.createElement('div');
+        dateTimeDiv.className = 'thread-date-time';
+        
+        const dateSpan = document.createElement('span');
+        dateSpan.className = `thread-date ${dateClass}`;
+        dateSpan.textContent = dateText; // Safe text content
+        
+        // Assemble the structure
+        threadRow1.appendChild(threadName);
+        if (agoText) {
+            const agoDiv = document.createElement('div');
+            agoDiv.className = `thread-ago ${timeClass}`;
+            agoDiv.textContent = agoText; // Safe text content
+            threadRow1.appendChild(agoDiv);
+        }
+        
+        threadRow2.appendChild(threadPreview);
+        
+        dateTimeDiv.appendChild(dateSpan);
+        if (timeText) {
+            const timeSpan = document.createElement('span');
+            timeSpan.className = `thread-time ${timeClass2}`;
+            timeSpan.textContent = timeText; // Safe text content
+            dateTimeDiv.appendChild(timeSpan);
+        }
+        
+        threadRow2.appendChild(dateTimeDiv);
+        
+        threadContent.appendChild(threadRow1);
+        threadContent.appendChild(threadRow2);
+        
+        div.appendChild(statusDot);
+        div.appendChild(threadContent);
         
         div.addEventListener('click', () => selectThread(thread.id, thread.display_name));
         threadsDiv.appendChild(div);
@@ -510,19 +577,40 @@ function showMessageNotification(data) {
         existingNotification.remove();
     }
 
-    // Create notification element
+    // Create notification element safely
     const notification = document.createElement('div');
     notification.className = 'message-notification';
-    notification.innerHTML = `
-        <div class="notification-content">
-            <div class="notification-icon">💬</div>
-            <div class="notification-text">
-                <div class="notification-name">${data.display_name}</div>
-                <div class="notification-preview">${data.message_preview}</div>
-            </div>
-            <button class="notification-close">×</button>
-        </div>
-    `;
+    
+    const notificationContent = document.createElement('div');
+    notificationContent.className = 'notification-content';
+    
+    const notificationIcon = document.createElement('div');
+    notificationIcon.className = 'notification-icon';
+    notificationIcon.textContent = '💬';
+    
+    const notificationText = document.createElement('div');
+    notificationText.className = 'notification-text';
+    
+    const notificationName = document.createElement('div');
+    notificationName.className = 'notification-name';
+    notificationName.textContent = data.display_name; // Safe text content
+    
+    const notificationPreview = document.createElement('div');
+    notificationPreview.className = 'notification-preview';
+    notificationPreview.textContent = data.message_preview; // Safe text content
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'notification-close';
+    closeBtn.textContent = '×';
+    
+    notificationText.appendChild(notificationName);
+    notificationText.appendChild(notificationPreview);
+    
+    notificationContent.appendChild(notificationIcon);
+    notificationContent.appendChild(notificationText);
+    notificationContent.appendChild(closeBtn);
+    
+    notification.appendChild(notificationContent);
 
     // Add to page
     document.body.appendChild(notification);
@@ -578,3 +666,20 @@ function parseMessageDate(input) {
     } catch (e) {}
     return new Date();
 }
+
+// ============================================
+// ERROR HANDLING
+// ============================================
+socket.on('message_error', (data) => {
+    console.error('Message error:', data);
+    showNotification(data.message || 'Mesaj gönderilirken hata oluştu', 'error');
+});
+
+socket.on('connect_error', (error) => {
+    console.error('❌ Bağlantı hatası:', error.message);
+    showNotification('Sunucuya bağlanılamıyor. Yeniden deneniyor...', 'error');
+});
+
+socket.on('reconnect_failed', () => {
+    showNotification('Sunucuya bağlanılamadı. Sayfayı yenileyin.', 'error');
+});

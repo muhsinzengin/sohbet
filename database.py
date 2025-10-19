@@ -28,11 +28,16 @@ class Database:
         self._local = threading.local()
 
         if self.is_postgres and psycopg2:
-            # PostgreSQL connection pool
+            # PostgreSQL connection pool - Railway için optimize edildi
             self._pool = psycopg2.pool.ThreadedConnectionPool(
                 minconn=1,
-                maxconn=10,
-                dsn=self.database_url
+                maxconn=3,  # Railway limit için düşürüldü
+                dsn=self.database_url,
+                connect_timeout=30,  # Railway için artırıldı
+                keepalives=1,
+                keepalives_idle=30,
+                keepalives_interval=10,
+                keepalives_count=5
             )
 
     def _get_sqlite_connection(self):

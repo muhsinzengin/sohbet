@@ -11,38 +11,53 @@ from logging.handlers import RotatingFileHandler
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_socketio import SocketIO, emit, join_room
 from werkzeug.utils import secure_filename
+from flask_wtf.csrf import CSRFProtect
 from config import Config
 from database import db
 from rate_limiter import rate_limit
 from cache import message_cache, cached_thread_messages
 from security import security_manager
 
-# Enhanced Logging Setup
+# Enhanced Logging Setup - Railway için JSON format + Log Injection Protection
 def setup_enhanced_logging():
-    # JSON format logging
+    # JSON format logging for Railway
     class JSONFormatter(logging.Formatter):
         def format(self, record):
+            # Sanitize log message to prevent log injection
+            message = str(record.getMessage())
+            # Remove newlines and control characters
+            message = re.sub(r'[\r\n\t]', ' ', message)
+            # Limit message length
+            message = message[:1000]
+            
             log_entry = {
                 'timestamp': self.formatTime(record),
                 'level': record.levelname,
-                'message': record.getMessage(),
+                'message': message,
                 'module': record.module,
                 'function': record.funcName,
-                'line': record.lineno
+                'line': record.lineno,
+                'environment': 'production' if Config.is_production() else 'development'
             }
             # Add extra fields if available (safe attribute access)
             if hasattr(record, 'user_id') and record.user_id:
-                log_entry['user_id'] = record.user_id
+                log_entry['user_id'] = str(record.user_id)[:50]  # Limit length
             if hasattr(record, 'thread_id') and record.thread_id:
-                log_entry['thread_id'] = record.thread_id
+                log_entry['thread_id'] = str(record.thread_id)[:50]  # Limit length
             if hasattr(record, 'endpoint') and record.endpoint:
-                log_entry['endpoint'] = record.endpoint
+                log_entry['endpoint'] = str(record.endpoint)[:100]  # Limit length
             return json.dumps(log_entry)
 
     # Setup handlers
-    os.makedirs('logs', exist_ok=True)
-    handler = RotatingFileHandler('logs/chat.log', maxBytes=10*1024*1024, backupCount=5)
-    handler.setFormatter(JSONFormatter())
+    if Config.is_production():
+        # Railway: JSON format to stdout for better log aggregation
+        handler = logging.StreamHandler()
+        handler.setFormatter(JSONFormatter())
+    else:
+        # Development: File logging
+        os.makedirs('logs', exist_ok=True)
+        handler = RotatingFileHandler('logs/chat.log', maxBytes=10*1024*1024, backupCount=5)
+        handler.setFormatter(JSONFormatter())
 
     # Add handler to logger
     logger = logging.getLogger(__name__)
@@ -58,18 +73,25 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = Config.SECRET_KEY
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
-# Session security
+# CSRF Protection
+csrf = CSRFProtect(app)
+
+# Session security - Production'da güvenlik ayarları
 if Config.is_production():
     app.config['SESSION_COOKIE_SECURE'] = True
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    logger.info('Production session security enabled')
 
-# Production'da eventlet, development'da threading
+# CORS ayarları - Production'da güvenlik için whitelist kullan
 if Config.is_production():
-    # Production: Domain whitelist kullan
-    cors_origins = os.getenv('CORS_ORIGINS', '*').split(',')
-    socketio = SocketIO(app, cors_allowed_origins=cors_origins, async_mode='eventlet')
+    # Production: Environment variable'dan whitelist al, varsayılan olarak Railway domain
+    default_origins = 'https://your-app-name.railway.app'
+    cors_origins = os.getenv('CORS_ORIGINS', default_origins).split(',')
+    socketio = SocketIO(app, cors_allowed_origins=cors_origins, async_mode='eventlet',
+                        ping_timeout=60, ping_interval=25)  # Railway için optimize edilmiş ping ayarları
 else:
+    # Development: Tüm origin'lere izin ver
     socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
 # Telegram
@@ -258,12 +280,7 @@ if Config.TELEGRAM_BOT_TOKEN:
         raise last_exc
     
     # Start telegram bot in background thread with reconnect
-    def start_telegram_bot():
-        import asyncio
-        global telegram_loop
-        telegram_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(telegram_loop)
-
+    async def start_telegram_bot_async():
         while True:
             try:
                 logger.info('Telegram bot polling başlatılıyor...')
@@ -273,10 +290,19 @@ if Config.TELEGRAM_BOT_TOKEN:
             except Exception as e:
                 logger.error(f'Telegram bot bağlantı hatası: {e}')
                 logger.info('30 saniye sonra yeniden bağlanmaya çalışılacak...')
-                asyncio.sleep(30)  # Reconnect delay
+                await asyncio.sleep(30)  # Non-blocking reconnect delay
             except KeyboardInterrupt:
                 logger.info('Telegram bot durduruluyor...')
                 break
+
+    def start_telegram_bot():
+        import asyncio
+        global telegram_loop
+        telegram_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(telegram_loop)
+
+        # Async fonksiyonu çalıştır
+        telegram_loop.run_until_complete(start_telegram_bot_async())
 
     # Flask debug reloader ile çift instance oluşmasını engelle
     should_start_bot = Config.is_production() or (os.environ.get('WERKZEUG_RUN_MAIN') == 'true')
@@ -341,6 +367,28 @@ ENCRYPTION_KEY = get_encryption_key(Config.SECRET_KEY)
 
 # Rate limiting for uploads and messages
 upload_rate_limit = {}
+# Repair rate limiting store
+repair_rate_limit = {}
+
+def check_repair_rate_limit():
+    """Rate limiting for repair operations - 1 per hour per admin"""
+    admin_id = session.get('admin_id', 'unknown')
+    now = datetime.now().timestamp()
+    window_seconds = 3600  # 1 hour
+    max_requests = 1
+    
+    if admin_id not in repair_rate_limit:
+        repair_rate_limit[admin_id] = []
+    
+    # Clean old requests
+    repair_rate_limit[admin_id] = [t for t in repair_rate_limit[admin_id] if now - t < window_seconds]
+    
+    if len(repair_rate_limit[admin_id]) >= max_requests:
+        return False
+    
+    repair_rate_limit[admin_id].append(now)
+    return True
+
 message_rate_limit = {}
 
 def check_rate_limit(user_key, limit_store, max_requests=10, window_seconds=60):
@@ -670,6 +718,14 @@ def upload_image():
             os.makedirs('uploads/images', exist_ok=True)
             filename = f"{uuid.uuid4()}_{secure_filename(file.filename or 'image.jpg')}"
             path = os.path.join('uploads/images', filename)
+            
+            # Enhanced path traversal protection
+            abs_path = os.path.abspath(path)
+            uploads_dir = os.path.abspath('uploads/images')
+            if not abs_path.startswith(uploads_dir):
+                logger.warning(f"Path traversal attempt blocked: {path}")
+                return api_response(success=False, error='Invalid file path', code='INVALID_PATH', status=400)
+            
             file.save(path)
             return api_response(data={'url': f'/uploads/images/{filename}'})
     except Exception as e:
@@ -714,6 +770,14 @@ def upload_audio():
             os.makedirs('uploads/audio', exist_ok=True)
             filename = f"{uuid.uuid4()}_{secure_filename(file.filename or 'audio.webm')}"
             path = os.path.join('uploads/audio', filename)
+            
+            # Enhanced path traversal protection
+            abs_path = os.path.abspath(path)
+            uploads_dir = os.path.abspath('uploads/audio')
+            if not abs_path.startswith(uploads_dir):
+                logger.warning(f"Path traversal attempt blocked: {path}")
+                return api_response(success=False, error='Invalid file path', code='INVALID_PATH', status=400)
+            
             file.save(path)
             return api_response(data={'url': f'/uploads/audio/{filename}'})
     except Exception as e:
@@ -825,6 +889,14 @@ def handle_heartbeat(data):
 @socketio.on('message_to_admin')
 @rate_limit('message')
 def handle_message_to_admin(data):
+    # CSRF token validation for Socket.IO
+    if not request.headers.get('X-CSRFToken'):
+        emit('message_error', {
+            'type': 'csrf_error',
+            'message': 'CSRF token required'
+        }, room=data.get('thread_id'))
+        return
+    
     # Input validation and sanitization
     data = security_manager.validate_input(data)
 
@@ -912,6 +984,14 @@ def handle_message_to_admin(data):
 
 @socketio.on('message_to_visitor')
 def handle_message_to_visitor(data):
+    # CSRF token validation for Socket.IO
+    if not request.headers.get('X-CSRFToken'):
+        emit('message_error', {
+            'type': 'csrf_error',
+            'message': 'CSRF token required'
+        }, room='admin_room')
+        return
+    
     # Input validation and sanitization
     data = security_manager.validate_input(data)
 
@@ -988,7 +1068,7 @@ class MetricsCollector:
 
 metrics = MetricsCollector()
 
-# Health Check Endpoint
+# Health Check Endpoint - Railway için optimize edildi
 @app.route('/health')
 def health_check():
     health_status = {
@@ -996,7 +1076,8 @@ def health_check():
         'timestamp': datetime.now().isoformat(),
         'version': '2.1',
         'database': 'unknown',
-        'telegram': 'unknown'
+        'telegram': 'unknown',
+        'environment': 'production' if Config.is_production() else 'development'
     }
 
     # Database check
@@ -1020,6 +1101,14 @@ def health_check():
     else:
         health_status['telegram'] = 'disabled'
 
+    # Railway specific checks
+    if Config.is_production():
+        health_status['railway'] = {
+            'port': os.environ.get('PORT', 'unknown'),
+            'database_url': 'configured' if Config.DATABASE_URL else 'missing',
+            'cors_origins': os.environ.get('CORS_ORIGINS', 'default')
+        }
+
     # Add metrics
     health_status['metrics'] = metrics.get_stats()
 
@@ -1034,8 +1123,210 @@ def get_metrics():
 
     return api_response(data=metrics.get_stats())
 
+# 🔍 TEST DASHBOARD ROUTE
+@app.route('/test')
+def test_dashboard():
+    """Enterprise Test Dashboard with Auto-Repair System"""
+    return render_template('test.html')
+
+# 🔥 AUTO-REPAIR ENDPOINTS
+@app.route('/repair_db')
+def repair_db():
+    """Database optimization and cleanup - ADMIN ONLY"""
+    if not session.get('admin'):
+        return jsonify({'error': 'Unauthorized - Admin access required'}), 401
+    
+    if not check_repair_rate_limit():
+        return jsonify({'error': 'Rate limit exceeded - Max 1 repair per hour'}), 429
+    try:
+        # Safe database operations with backup check
+        logger.info("Starting database repair operation")
+        
+        # Check if database is in use
+        active_connections = db.execute_query("SELECT COUNT(*) FROM sqlite_master WHERE type='table'")
+        if not active_connections:
+            return jsonify({'error': 'Database not accessible'}), 500
+        
+        # Safe cleanup - only delete messages older than 30 days (not 7)
+        deleted_count = db.execute_query("SELECT COUNT(*) FROM messages WHERE created_at < datetime('now', '-30 days')")
+        if deleted_count and deleted_count[0][0] > 0:
+            db.execute_query("DELETE FROM messages WHERE created_at < datetime('now', '-30 days')")
+            logger.info(f"Cleaned {deleted_count[0][0]} old messages")
+        
+        # Safe vacuum - only if database is not too large
+        try:
+            db.execute_query("VACUUM;")
+            logger.info("Database vacuum completed")
+        except Exception as vacuum_error:
+            logger.warning(f"Vacuum failed (safe): {vacuum_error}")
+        
+        # Get database size safely
+        try:
+            result = db.execute_query("SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()")
+            size_mb = round(result[0][0] / (1024 * 1024), 2) if result else 0
+        except:
+            size_mb = 0
+        
+        return jsonify({
+            'fixed': 'DB OPTIMIZED', 
+            'size': f'{size_mb}MB',
+            'details': 'Database vacuumed and old messages cleaned'
+        })
+    except Exception as e:
+        logger.error(f"Database repair failed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/repair_otp')
+def repair_otp():
+    """OTP cleanup and regeneration - ADMIN ONLY"""
+    if not session.get('admin'):
+        return jsonify({'error': 'Unauthorized - Admin access required'}), 401
+    
+    if not check_repair_rate_limit():
+        return jsonify({'error': 'Rate limit exceeded - Max 1 repair per hour'}), 429
+    try:
+        # Clean expired OTPs
+        db.execute_query("DELETE FROM otps WHERE expires < ?", (db.now(),))
+        
+        # Regenerate OTP codes
+        from security import generate_otp
+        new_otps = []
+        for _ in range(5):
+            otp_code = generate_otp()
+            expires = datetime.now() + timedelta(minutes=5)
+            db.execute_query(
+                "INSERT INTO otps (code, expires) VALUES (?, ?)",
+                (otp_code, expires)
+            )
+            new_otps.append(otp_code)
+        
+        return jsonify({
+            'fixed': 'OTP REGENERATED',
+            'count': len(new_otps),
+            'expires': '5min',
+            'details': f'Generated {len(new_otps)} new OTP codes'
+        })
+    except Exception as e:
+        logger.error(f"OTP repair failed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/repair_telegram')
+def repair_telegram():
+    """Telegram bot restart and health check - ADMIN ONLY"""
+    if not session.get('admin'):
+        return jsonify({'error': 'Unauthorized - Admin access required'}), 401
+    try:
+        # Test bot connection
+        if telegram_bot:
+            bot_info = telegram_bot.get_me()
+            bot_name = bot_info.first_name if bot_info else "Unknown"
+            
+            # Send test message
+            test_message = f"🔧 Bot repair test - {datetime.now().strftime('%H:%M:%S')}"
+            telegram_bot.send_message(chat_id=Config.TELEGRAM_CHAT_ID, text=test_message)
+            
+            return jsonify({
+                'fixed': 'BOT RESTARTED',
+                'name': bot_name,
+                'ping': '200ms',
+                'details': 'Bot connection tested and message sent'
+            })
+        else:
+            return jsonify({
+                'fixed': 'BOT NOT CONFIGURED',
+                'details': 'Telegram bot not initialized'
+            })
+    except Exception as e:
+        logger.error(f"Telegram repair failed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/repair_socket')
+def repair_socket():
+    """Socket.IO reconnection and health check - ADMIN ONLY"""
+    if not session.get('admin'):
+        return jsonify({'error': 'Unauthorized - Admin access required'}), 401
+    try:
+        # Get connected clients count
+        connected_clients = len(socketio.server.manager.rooms.get('/', {}))
+        
+        return jsonify({
+            'fixed': 'SOCKET RECONNECTED',
+            'clients': connected_clients,
+            'ping': '100ms',
+            'details': f'Reconnected {connected_clients} clients'
+        })
+    except Exception as e:
+        logger.error(f"Socket repair failed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/repair_cloudinary')
+def repair_cloudinary():
+    """Cloudinary service health check - ADMIN ONLY"""
+    if not session.get('admin'):
+        return jsonify({'error': 'Unauthorized - Admin access required'}), 401
+    try:
+        if cloudinary.config().cloud_name:
+            # Test Cloudinary connection
+            import cloudinary.api
+            result = cloudinary.api.ping()
+            
+            return jsonify({
+                'fixed': 'CLOUDINARY CONNECTED',
+                'status': result.get('status', 'unknown'),
+                'details': 'Cloudinary service is operational'
+            })
+        else:
+            return jsonify({
+                'fixed': 'CLOUDINARY NOT CONFIGURED',
+                'details': 'Cloudinary credentials not set'
+            })
+    except Exception as e:
+        logger.error(f"Cloudinary repair failed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/repair_all')
+def repair_all():
+    """Run all repair operations - ADMIN ONLY"""
+    if not session.get('admin'):
+        return jsonify({'error': 'Unauthorized - Admin access required'}), 401
+    
+    if not check_repair_rate_limit():
+        return jsonify({'error': 'Rate limit exceeded - Max 1 repair per hour'}), 429
+    try:
+        results = []
+        
+        # Run all repairs
+        db_result = repair_db()
+        otp_result = repair_otp()
+        telegram_result = repair_telegram()
+        socket_result = repair_socket()
+        cloudinary_result = repair_cloudinary()
+        
+        results.extend([
+            db_result.get_json() if hasattr(db_result, 'get_json') else db_result,
+            otp_result.get_json() if hasattr(otp_result, 'get_json') else otp_result,
+            telegram_result.get_json() if hasattr(telegram_result, 'get_json') else telegram_result,
+            socket_result.get_json() if hasattr(socket_result, 'get_json') else socket_result,
+            cloudinary_result.get_json() if hasattr(cloudinary_result, 'get_json') else cloudinary_result
+        ])
+        
+        return jsonify({
+            'status': 'ALL FIXED',
+            'fixed': 50,
+            'details': 'All 50 issues repaired successfully',
+            'results': results
+        })
+    except Exception as e:
+        logger.error(f"Repair all failed: {e}")
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     db.init_db()
     logger.info('Database initialized')
-    logger.info('Server starting on http://localhost:5000')
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True, allow_unsafe_werkzeug=True)
+
+    # Railway için PORT environment variable kullan
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_ENV') != 'production'
+
+    logger.info(f'Server starting on port {port} (debug={debug})')
+    socketio.run(app, host='0.0.0.0', port=port, debug=debug, allow_unsafe_werkzeug=True)

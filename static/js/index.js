@@ -1,4 +1,24 @@
 // ============================================
+// SECURITY UTILITIES
+// ============================================
+function escapeHtml(text) {
+    if (!text) return '';
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+        .replace(/\//g, '&#x2F;');
+}
+
+function safeSetTextContent(element, text) {
+    if (element && text !== null && text !== undefined) {
+        element.textContent = text;
+    }
+}
+
+// ============================================
 // SAFE DOM LOADING
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
@@ -10,14 +30,24 @@ function initializeApp() {
     // ============================================
     // SOCKET.IO BAĞLANTISI
     // ============================================
+    // Socket.IO bağlantısı CSRF token ile
     const socket = io({
         transports: ['websocket', 'polling'],
         reconnection: true,
         reconnectionAttempts: 10,
         timeout: 30000,
         upgrade: true,
-        rememberUpgrade: true
+        rememberUpgrade: true,
+        extraHeaders: {
+            'X-CSRFToken': getCsrfToken()
+        }
     });
+    
+    // CSRF token alma fonksiyonu
+    function getCsrfToken() {
+        const token = document.querySelector('meta[name=csrf-token]');
+        return token ? token.getAttribute('content') : '';
+    }
 
     socket.on('connect', () => {
         console.log('✅ Socket.IO bağlandı!');
@@ -396,7 +426,10 @@ function initializeApp() {
     function startMessageClearTimer() {
         clearTimeout(messageClearTimer);
         messageClearTimer = setTimeout(() => {
-            messagesDiv.innerHTML = '';
+            // Clear messages safely
+            while (messagesDiv.firstChild) {
+                messagesDiv.removeChild(messagesDiv.firstChild);
+            }
         }, 5 * 60 * 1000);
     }
 
@@ -534,3 +567,28 @@ if (typeof THREE !== 'undefined') {
         console.warn('⚠️ Three.js animasyonu başlatılamadı:', error);
     }
 }
+
+// ============================================
+// ERROR HANDLING
+// ============================================
+socket.on('message_error', (data) => {
+    console.error('Message error:', data);
+    showNotification(data.message || 'Mesaj gönderilirken hata oluştu', 'error');
+    
+    // Butonları tekrar aktif et
+    sendBtn.disabled = false;
+    msgInput.disabled = false;
+    imageBtn.disabled = false;
+    audioBtn.disabled = false;
+    msgInput.placeholder = 'Mesajınızı yazın...';
+});
+
+socket.on('connect_error', (error) => {
+    console.error('❌ Bağlantı hatası:', error.message);
+    showNotification('Sunucuya bağlanılamıyor. Yeniden deneniyor...', 'error');
+    isOnline = false;
+});
+
+socket.on('reconnect_failed', () => {
+    showNotification('Sunucuya bağlanılamadı. Sayfayı yenileyin.', 'error');
+});

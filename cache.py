@@ -4,9 +4,9 @@ from functools import wraps
 from typing import Any, Dict, Optional
 
 class MessageCache:
-    """Thread-safe message caching system"""
+    """Thread-safe message caching system - Railway optimized"""
 
-    def __init__(self, max_size: int = 1000, ttl: int = 300):  # 5 dakika TTL
+    def __init__(self, max_size: int = 500, ttl: int = 180):  # Railway için azaltılmış TTL (3 dakika)
         self.max_size = max_size
         self.ttl = ttl
         self._cache: Dict[str, Dict[str, Any]] = {}
