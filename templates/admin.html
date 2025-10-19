@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div id="admin-app">
+        <div id="admin-header">
+            <h2>💬 Admin Panel</h2>
+            <button id="logout-btn" onclick="location.href='/logout'">➤ Çıkış</button>
+        </div>
+
+        <div id="admin-container">
+            <div id="thread-list">
+                <div id="thread-list-header">
+                    <h3>Konuşmalar</h3>
+                    <button id="clear-all-btn">🗑️</button>
+                </div>
+                <div id="threads"></div>
+            </div>
+
+            <div id="chat-panel">
+                <div id="selected-thread-info" style="display:none;">
+                    <button id="back-btn">Geri</button>
+                    <span id="selected-name"></span>
+                    <button id="clear-thread-btn">🗑️</button>
+                </div>
+                <div id="admin-messages"></div>
+                <div id="admin-input" style="display:none;">
+                    <button id="admin-image-btn">📷</button>
+                    <button id="admin-audio-btn">🎤</button>
+                    <input type="file" id="admin-image-input" accept="image/*">
+                    <input type="text" id="admin-msg-input" placeholder="Yanıt yazın...">
+                    <button id="admin-send-btn">➤</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="/static/js/admin.js"></script>
+</body>
+</html>

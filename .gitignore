@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.env
+data/
+uploads/
+*.db
+.DS_Store
+
+# SYSTEM_DOCS klasörünü KORUMA ALTINA AL
+# !SYSTEM_DOCS/
+# !SYSTEM_DOCS/**

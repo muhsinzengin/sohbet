@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Chat</title>
+    <link rel="stylesheet" href="/static/css/index-style.css">
+</head>
+<body>
+    <canvas id="canvas-bg"></canvas>
+
+    <div class="app-wrapper">
+        <div id="name-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-emoji">✨</div>
+                <h2>Premium Chat</h2>
+                <p>Akıllı iletişim çözümleri</p>
+                <input type="text" id="display-name-input" placeholder="Adınızı girin..." maxlength="50">
+                <button id="join-btn">SOHBETE BAŞLA</button>
+            </div>
+        </div>
+
+        <div id="chat-container" style="display:none;">
+            <div id="chat-header">
+                <div class="header-content">
+                    <h3>💬 Admin</h3>
+                    <span>
+                        <span class="status-indicator"></span>
+                        Uzman ekip hazır
+                    </span>
+                </div>
+                <div class="header-status">
+                    <div style="text-align: right;">
+                        <div id="user-name">Hoş geldiniz</div>
+                        <div style="display: flex; align-items: center; gap: 6px; justify-content: flex-end; margin-top: 4px;">
+                            <span class="status-indicator"></span>
+                            <span style="font-size: 12px; color: #4ade80;">Çevrimiçi</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="messages"></div>
+
+            <div class="privacy-notice">
+                <span>🔒 Gizlilik için mesajlar 5 dakikada silinir</span>
+            </div>
+
+            <div id="chat-input">
+                <button id="image-btn">📷</button>
+                <button id="audio-btn">🎤</button>
+                <input type="file" id="image-input" accept="image/*">
+                <input type="text" id="msg-input" placeholder="Mesajınızı yazın...">
+                <button id="send-btn">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="/static/js/index.js"></script>
+</body>
+</html>

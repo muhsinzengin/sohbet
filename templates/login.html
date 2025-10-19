@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Giriş</title>
+    <link rel="stylesheet" href="/static/css/index-style.css">
+    <style>
+        .otp-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .otp-input {
+            font-size: 24px;
+            text-align: center;
+            letter-spacing: 10px;
+            padding: 15px;
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin-top: 10px;
+        }
+        .success-msg {
+            color: #10b981;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .error-msg {
+            color: #ef4444;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas-bg"></canvas>
+
+    <div class="app-wrapper">
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-emoji">🔐</div>
+                <h2>Admin Girişi</h2>
+                <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">
+                    Telegram'a gönderilen 6 haneli kodu girin
+                </p>
+                
+                <div class="otp-container">
+                    <button type="button" id="requestOtpBtn" class="btn-secondary">
+                        📱 OTP Kodu İste
+                    </button>
+                    
+                    <div id="successMsg" class="success-msg" style="display: none;">
+                        ✅ OTP Telegram'a gönderildi!
+                    </div>
+                    
+                    {% if error %}
+                    <p class="error-msg">{{ error }}</p>
+                    {% endif %}
+                    
+                    <form id="otpForm">
+                        <input 
+                            type="text" 
+                            id="otpInput"
+                            name="otp" 
+                            class="otp-input"
+                            placeholder="000000" 
+                            maxlength="6"
+                            pattern="[0-9]{6}"
+                            required
+                            autocomplete="off">
+                        <button type="submit">🔓 GİRİŞ YAP</button>
+                    </form>
+                    
+                    <div id="errorMsg" class="error-msg" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Three.js background animation
+        const canvas = document.getElementById('canvas-bg');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0xf0f5fa, 0.1);
+
+        camera.position.z = 50;
+
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 150;
+        const posArray = new Float32Array(particlesCount * 3);
+
+        for (let i = 0; i < particlesCount * 3; i += 3) {
+            posArray[i] = (Math.random() - 0.5) * 200;
+            posArray[i + 1] = (Math.random() - 0.5) * 200;
+            posArray[i + 2] = (Math.random() - 0.5) * 200;
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 1.2,
+            color: 0x4eb3f5,
+            sizeAttenuation: true,
+            transparent: true,
+            opacity: 0.4
+        });
+
+        const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particles);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            particles.rotation.x += 0.0001;
+            particles.rotation.y += 0.0002;
+
+            const positionsArray = particlesGeometry.attributes.position.array;
+            for (let i = 0; i < positionsArray.length; i += 3) {
+                positionsArray[i] += (Math.random() - 0.5) * 0.3;
+                positionsArray[i + 1] += (Math.random() - 0.5) * 0.3;
+            }
+            particlesGeometry.attributes.position.needsUpdate = true;
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // OTP Request
+        document.getElementById('requestOtpBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('requestOtpBtn');
+            const successMsg = document.getElementById('successMsg');
+            
+            btn.disabled = true;
+            btn.textContent = '⏳ Gönderiliyor...';
+            
+            try {
+                const response = await fetch('/request-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    successMsg.style.display = 'block';
+                    if (data.otp) {
+                        successMsg.innerHTML = `✅ Test OTP: <strong style="font-size: 18px; color: #10b981;">${data.otp}</strong>`;
+                    } else {
+                        successMsg.textContent = '✅ OTP Telegram\'a gönderildi!';
+                    }
+                    btn.textContent = '✅ Gönderildi';
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.textContent = '📱 Tekrar Gönder';
+                    }, 5000);
+                } else {
+                    alert('Hata: ' + (data.error || 'Bilinmeyen hata'));
+                    btn.disabled = false;
+                    btn.textContent = '📱 OTP Kodu İste';
+                }
+            } catch (error) {
+                alert('Bağlantı hatası: ' + error.message);
+                btn.disabled = false;
+                btn.textContent = '📱 OTP Kodu İste';
+            }
+        });
+
+        // OTP Form Submit
+        document.getElementById('otpForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const otpInput = document.getElementById('otpInput');
+            const errorMsg = document.getElementById('errorMsg');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            const otp = otpInput.value.trim();
+            
+            if (otp.length !== 6) {
+                errorMsg.textContent = '❌ 6 haneli kod girin!';
+                errorMsg.style.display = 'block';
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Doğrulanıyor...';
+            errorMsg.style.display = 'none';
+            
+            try {
+                const response = await fetch('/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ otp: otp })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    window.location.href = data.redirect || '/admin';
+                } else {
+                    errorMsg.textContent = '❌ ' + (data.message || 'Giriş başarısız!');
+                    errorMsg.style.display = 'block';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '🔓 GİRİŞ YAP';
+                    otpInput.value = '';
+                    otpInput.focus();
+                }
+            } catch (error) {
+                errorMsg.textContent = '❌ Bağlantı hatası: ' + error.message;
+                errorMsg.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🔓 GİRİŞ YAP';
+            }
+        });
+
+        // Auto-focus OTP input
+        document.querySelector('.otp-input').addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        });
+    </script>
+</body>
+</html>
