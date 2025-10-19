@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+  <!-- Background with gradient -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#16213e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f0f23;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="90" cy="90" r="85" fill="url(#bg)" stroke="#00ff88" stroke-width="6"/>
+  
+  <!-- Main chat bubble -->
+  <path d="M45 75c0-8.3 6.7-15 15-15h60c8.3 0 15 6.7 15 15v45c0 8.3-6.7 15-15 15h-15l-22.5 22.5V135H60c-8.3 0-15-6.7-15-15V75z" fill="#00ff88"/>
+  
+  <!-- Message dots -->
+  <circle cx="75" cy="90" r="6" fill="#16213e"/>
+  <circle cx="105" cy="90" r="6" fill="#16213e"/>
+  
+  <!-- Test indicator -->
+  <rect x="130" y="50" width="30" height="30" rx="6" fill="#ff6b6b"/>
+  <text x="145" y="70" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="white">T</text>
+  
+  <!-- Decorative elements -->
+  <circle cx="30" cy="30" r="3" fill="#00ff88" opacity="0.6"/>
+  <circle cx="150" cy="30" r="3" fill="#00ff88" opacity="0.6"/>
+  <circle cx="30" cy="150" r="3" fill="#00ff88" opacity="0.6"/>
+  <circle cx="150" cy="150" r="3" fill="#00ff88" opacity="0.6"/>
+</svg>

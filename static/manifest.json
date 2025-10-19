@@ -1,0 +1,33 @@
+{
+  "name": "Flask Chat v2.3 - Test Dashboard",
+  "short_name": "Flask Chat",
+  "description": "Premium Chat Application with Mobile Test Dashboard",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#16213e",
+  "theme_color": "#00ff88",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/favicon-16x16.svg",
+      "sizes": "16x16",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/static/apple-touch-icon.svg",
+      "sizes": "180x180",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["productivity", "utilities", "social"],
+  "lang": "tr",
+  "dir": "ltr",
+  "scope": "/",
+  "prefer_related_applications": false
+}

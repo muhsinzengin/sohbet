@@ -2,179 +2,285 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔍 FLASK CHAT v2.3 - MOBILE REPAIR TEST DASHBOARD</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🔍 Flask Chat v2.3 - Mobile Test Dashboard</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon-16x16.svg" sizes="16x16">
+    <link rel="apple-touch-icon" href="/static/apple-touch-icon.svg">
+    <link rel="manifest" href="/static/manifest.json">
     <link rel="stylesheet" href="/static/test.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/static/test.js"></script>
+    <meta name="theme-color" content="#16213e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
-    <div class="container">
-        <h1>🔍 FLASK CHAT v2.3 - MOBILE REPAIR TEST DASHBOARD</h1>
-        <p class="subtitle">120 Test + 50 Auto-Fix | %100 Mobile | Test & Repair Aynı Bütünlükte</p>
-        
-        <!-- 🔄 AYNI BÜTÜNLÜKTE BUTTONS -->
-        <div class="button-group">
-            <button class="test-btn" onclick="runAllTests()">🚀 RUN ALL TESTS (3dk)</button>
-            <button class="repair-btn" onclick="runAutoRepair()">🔧 AUTO-FIX ALL (3sn)</button>
+    <!-- 📱 MOBILE HEADER -->
+    <header class="mobile-header">
+        <div class="header-content">
+            <h1>🔍 Test Dashboard</h1>
+            <div class="header-stats">
+                <span id="totalScore">0</span>/150
+            </div>
         </div>
+    </header>
+
+    <!-- 📊 PROGRESS BAR -->
+    <div class="progress-container">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">0%</div>
+    </div>
+
+    <!-- 🎯 ACTION BUTTONS -->
+    <div class="action-buttons">
+        <button class="btn-primary" id="runTestsBtn" onclick="runAllTests()">
+            <span class="btn-icon">🚀</span>
+            <span class="btn-text">Run Tests</span>
+        </button>
+        <button class="btn-secondary" id="repairBtn" onclick="runAutoRepair()">
+            <span class="btn-icon">🔧</span>
+            <span class="btn-text">Auto Fix</span>
+        </button>
+    </div>
+
+    <!-- 📱 MOBILE TEST CARDS -->
+    <div class="test-cards-container">
         
-        <div class="results-grid">
-            <!-- 1. MESSAGE TESTS -->
-            <div class="card">
-                <h3 onclick="toggleDetails(this)">📨 Mesajlaşma (15 Test) <span id="msgCount">0</span>/15</h3>
-                <table id="msgTable">
-                    <tr><th>ID</th><th>Test</th><th>Status</th><th>Time</th><th>🔍</th></tr>
-                </table>
-            </div>
-
-            <!-- 2. DATABASE TESTS -->
-            <div class="card">
-                <h3 onclick="toggleDetails(this)">🗄️ Database (12 Test) <span id="dbCount">0</span>/12</h3>
-                <table id="dbTable">
-                    <tr><th>ID</th><th>Test</th><th>Status</th><th>Time</th><th>🔍</th></tr>
-                </table>
-            </div>
-
-            <!-- 3. SOCKET.IO TESTS -->
-            <div class="card">
-                <h3 onclick="toggleDetails(this)">🔌 Socket.IO (10 Test) <span id="socketCount">0</span>/10</h3>
-                <table id="socketTable">
-                    <tr><th>ID</th><th>Test</th><th>Status</th><th>Time</th><th>🔍</th></tr>
-                </table>
-            </div>
-
-            <!-- 4. TELEGRAM TESTS -->
-            <div class="card">
-                <h3 onclick="toggleDetails(this)">🤖 Telegram (8 Test) <span id="telegramCount">0</span>/8</h3>
-                <table id="telegramTable">
-                    <tr><th>ID</th><th>Test</th><th>Status</th><th>Time</th><th>🔍</th></tr>
-                </table>
-            </div>
-
-            <!-- 5. FILE UPLOAD TESTS -->
-            <div class="card">
-                <h3 onclick="toggleDetails(this)">📁 File Upload (10 Test) <span id="fileCount">0</span>/10</h3>
-                <table id="fileTable">
-                    <tr><th>ID</th><th>Test</th><th>Status</th><th>Time</th><th>🔍</th></tr>
-                </table>
-            </div>
-
-            <!-- 6. SECURITY TESTS -->
-            <div class="card">
-                <h3 onclick="toggleDetails(this)">🔒 Security (15 Test) <span id="securityCount">0</span>/15</h3>
-                <table id="securityTable">
-                    <tr><th>ID</th><th>Test</th><th>Status</th><th>Time</th><th>🔍</th></tr>
-                </table>
-            </div>
-
-            <!-- 7. PERFORMANCE TESTS -->
-            <div class="card">
-                <h3 onclick="toggleDetails(this)">⚡ Performance (10 Test) <span id="perfCount">0</span>/10</h3>
-                <table id="perfTable">
-                    <tr><th>ID</th><th>Test</th><th>Status</th><th>Time</th><th>🔍</th></tr>
-                </table>
-            </div>
-
-            <!-- 8. API TESTS -->
-            <div class="card">
-                <h3 onclick="toggleDetails(this)">🌐 API Endpoints (12 Test) <span id="apiCount">0</span>/12</h3>
-                <table id="apiTable">
-                    <tr><th>ID</th><th>Test</th><th>Status</th><th>Time</th><th>🔍</th></tr>
-                </table>
-            </div>
-
-            <!-- 9. AUTHENTICATION TESTS -->
-            <div class="card">
-                <h3 onclick="toggleDetails(this)">🔐 Authentication (8 Test) <span id="authCount">0</span>/8</h3>
-                <table id="authTable">
-                    <tr><th>ID</th><th>Test</th><th>Status</th><th>Time</th><th>🔍</th></tr>
-                </table>
-            </div>
-
-            <!-- 10. CACHE TESTS -->
-            <div class="card">
-                <h3 onclick="toggleDetails(this)">💾 Cache System (6 Test) <span id="cacheCount">0</span>/6</h3>
-                <table id="cacheTable">
-                    <tr><th>ID</th><th>Test</th><th>Status</th><th>Time</th><th>🔍</th></tr>
-                </table>
-            </div>
-
-            <!-- 11. RATE LIMITING TESTS -->
-            <div class="card">
-                <h3 onclick="toggleDetails(this)">🚦 Rate Limiting (5 Test) <span id="rateCount">0</span>/5</h3>
-                <table id="rateTable">
-                    <tr><th>ID</th><th>Test</th><th>Status</th><th>Time</th><th>🔍</th></tr>
-                </table>
-            </div>
-
-            <!-- 12. HEALTH CHECK TESTS -->
-            <div class="card">
-                <h3 onclick="toggleDetails(this)">🏥 Health Check (5 Test) <span id="healthCount">0</span>/5</h3>
-                <table id="healthTable">
-                    <tr><th>ID</th><th>Test</th><th>Status</th><th>Time</th><th>🔍</th></tr>
-                </table>
-            </div>
-
-            <!-- 13. CORS TESTS -->
-            <div class="card">
-                <h3 onclick="toggleDetails(this)">🌍 CORS (4 Test) <span id="corsCount">0</span>/4</h3>
-                <table id="corsTable">
-                    <tr><th>ID</th><th>Test</th><th>Status</th><th>Time</th><th>🔍</th></tr>
-                </table>
-            </div>
-
-            <!-- 14. SESSION TESTS -->
-            <div class="card">
-                <h3 onclick="toggleDetails(this)">🍪 Session Management (4 Test) <span id="sessionCount">0</span>/4</h3>
-                <table id="sessionTable">
-                    <tr><th>ID</th><th>Test</th><th>Status</th><th>Time</th><th>🔍</th></tr>
-                </table>
-            </div>
-
-            <!-- 15. ERROR HANDLING TESTS -->
-            <div class="card">
-                <h3 onclick="toggleDetails(this)">⚠️ Error Handling (6 Test) <span id="errorCount">0</span>/6</h3>
-                <table id="errorTable">
-                    <tr><th>ID</th><th>Test</th><th>Status</th><th>Time</th><th>🔍</th></tr>
-                </table>
-            </div>
-
-            <!-- 📊 SUMMARY CARD -->
-            <div class="card summary-card">
-                <h3 onclick="toggleDetails(this)">📊 GRAND SUMMARY</h3>
-                <canvas id="summaryChart"></canvas>
-                <h2>Total: <span id="finalScore">0</span>/600</h2>
-                <div class="summary-stats">
-                    <div class="stat">
-                        <span class="stat-label">✅ Pass:</span>
-                        <span id="passCount">0</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-label">❌ Fail:</span>
-                        <span id="failCount">0</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-label">⏱️ Time:</span>
-                        <span id="totalTime">0s</span>
-                    </div>
+        <!-- 📨 MESSAGE TESTS -->
+        <div class="test-card" data-category="messages">
+            <div class="card-header" onclick="toggleCard(this)">
+                <div class="card-title">
+                    <span class="card-icon">📨</span>
+                    <span class="card-name">Messages</span>
                 </div>
+                <div class="card-score">
+                    <span id="msgScore">0</span>/15
+                </div>
+                <div class="card-toggle">▼</div>
+            </div>
+            <div class="card-content">
+                <div class="test-list" id="msgTests"></div>
             </div>
         </div>
-        
-        <!-- 🔧 REPAIR MODAL -->
-        <div id="repairModal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="closeModal()">&times;</span>
-                <h3>🔧 AUTO-REPAIR REPORT</h3>
-                <canvas id="repairChart" style="height:150px;"></canvas>
-                <table id="repairTable">
-                    <tr><th>Issue</th><th>Status</th><th>Fixed</th><th>🔍</th></tr>
-                </table>
-                <p id="repairSummary"></p>
+
+        <!-- 🗄️ DATABASE TESTS -->
+        <div class="test-card" data-category="database">
+            <div class="card-header" onclick="toggleCard(this)">
+                <div class="card-title">
+                    <span class="card-icon">🗄️</span>
+                    <span class="card-name">Database</span>
+                </div>
+                <div class="card-score">
+                    <span id="dbScore">0</span>/15
+                </div>
+                <div class="card-toggle">▼</div>
+            </div>
+            <div class="card-content">
+                <div class="test-list" id="dbTests"></div>
+            </div>
+        </div>
+
+        <!-- 📱 TELEGRAM TESTS -->
+        <div class="test-card" data-category="telegram">
+            <div class="card-header" onclick="toggleCard(this)">
+                <div class="card-title">
+                    <span class="card-icon">📱</span>
+                    <span class="card-name">Telegram</span>
+                </div>
+                <div class="card-score">
+                    <span id="tgScore">0</span>/15
+                </div>
+                <div class="card-toggle">▼</div>
+            </div>
+            <div class="card-content">
+                <div class="test-list" id="tgTests"></div>
+            </div>
+        </div>
+
+        <!-- 🔌 SOCKET TESTS -->
+        <div class="test-card" data-category="socket">
+            <div class="card-header" onclick="toggleCard(this)">
+                <div class="card-title">
+                    <span class="card-icon">🔌</span>
+                    <span class="card-name">Socket.IO</span>
+                </div>
+                <div class="card-score">
+                    <span id="socketScore">0</span>/15
+                </div>
+                <div class="card-toggle">▼</div>
+            </div>
+            <div class="card-content">
+                <div class="test-list" id="socketTests"></div>
+            </div>
+        </div>
+
+        <!-- ☁️ CLOUDINARY TESTS -->
+        <div class="test-card" data-category="cloudinary">
+            <div class="card-header" onclick="toggleCard(this)">
+                <div class="card-title">
+                    <span class="card-icon">☁️</span>
+                    <span class="card-name">Cloudinary</span>
+                </div>
+                <div class="card-score">
+                    <span id="cloudScore">0</span>/15
+                </div>
+                <div class="card-toggle">▼</div>
+            </div>
+            <div class="card-content">
+                <div class="test-list" id="cloudTests"></div>
+            </div>
+        </div>
+
+        <!-- 🔒 SECURITY TESTS -->
+        <div class="test-card" data-category="security">
+            <div class="card-header" onclick="toggleCard(this)">
+                <div class="card-title">
+                    <span class="card-icon">🔒</span>
+                    <span class="card-name">Security</span>
+                </div>
+                <div class="card-score">
+                    <span id="secScore">0</span>/15
+                </div>
+                <div class="card-toggle">▼</div>
+            </div>
+            <div class="card-content">
+                <div class="test-list" id="secTests"></div>
+            </div>
+        </div>
+
+        <!-- ⚡ PERFORMANCE TESTS -->
+        <div class="test-card" data-category="performance">
+            <div class="card-header" onclick="toggleCard(this)">
+                <div class="card-title">
+                    <span class="card-icon">⚡</span>
+                    <span class="card-name">Performance</span>
+                </div>
+                <div class="card-score">
+                    <span id="perfScore">0</span>/15
+                </div>
+                <div class="card-toggle">▼</div>
+            </div>
+            <div class="card-content">
+                <div class="test-list" id="perfTests"></div>
+            </div>
+        </div>
+
+        <!-- 🎨 UI TESTS -->
+        <div class="test-card" data-category="ui">
+            <div class="card-header" onclick="toggleCard(this)">
+                <div class="card-title">
+                    <span class="card-icon">🎨</span>
+                    <span class="card-name">UI/UX</span>
+                </div>
+                <div class="card-score">
+                    <span id="uiScore">0</span>/15
+                </div>
+                <div class="card-toggle">▼</div>
+            </div>
+            <div class="card-content">
+                <div class="test-list" id="uiTests"></div>
+            </div>
+        </div>
+
+        <!-- 📱 MOBILE TESTS -->
+        <div class="test-card" data-category="mobile">
+            <div class="card-header" onclick="toggleCard(this)">
+                <div class="card-title">
+                    <span class="card-icon">📱</span>
+                    <span class="card-name">Mobile</span>
+                </div>
+                <div class="card-score">
+                    <span id="mobileScore">0</span>/15
+                </div>
+                <div class="card-toggle">▼</div>
+            </div>
+            <div class="card-content">
+                <div class="test-list" id="mobileTests"></div>
+            </div>
+        </div>
+
+        <!-- 🚀 RAILWAY TESTS -->
+        <div class="test-card" data-category="railway">
+            <div class="card-header" onclick="toggleCard(this)">
+                <div class="card-title">
+                    <span class="card-icon">🚀</span>
+                    <span class="card-name">Railway</span>
+                </div>
+                <div class="card-score">
+                    <span id="railwayScore">0</span>/15
+                </div>
+                <div class="card-toggle">▼</div>
+            </div>
+            <div class="card-content">
+                <div class="test-list" id="railwayTests"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 📊 SUMMARY CARD -->
+    <div class="summary-card">
+        <div class="summary-header">
+            <h3>📊 Test Summary</h3>
+            <div class="summary-chart">
+                <canvas id="summaryChart"></canvas>
+            </div>
+        </div>
+        <div class="summary-stats">
+            <div class="stat-item">
+                <span class="stat-label">Total Tests</span>
+                <span class="stat-value" id="totalTests">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Passed</span>
+                <span class="stat-value passed" id="passedTests">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Failed</span>
+                <span class="stat-value failed" id="failedTests">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Success Rate</span>
+                <span class="stat-value" id="successRate">0%</span>
             </div>
         </div>
     </div>
+
+    <!-- 🔧 REPAIR MODAL -->
+    <div id="repairModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔧 Auto Repair Report</h3>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="repair-progress">
+                    <div class="repair-bar">
+                        <div class="repair-fill" id="repairProgress"></div>
+                    </div>
+                    <div class="repair-text" id="repairText">Starting repairs...</div>
+                </div>
+                <div class="repair-list" id="repairList"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📱 NOTIFICATIONS -->
+    <div id="notifications" class="notifications-container"></div>
+
+    <!-- 📱 FLOATING ACTION BUTTON -->
+    <div class="fab-container">
+        <button class="fab" id="fabBtn" onclick="scrollToTop()">
+            <span>↑</span>
+        </button>
+    </div>
+
 </body>
 </html>

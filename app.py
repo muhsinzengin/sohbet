@@ -503,7 +503,19 @@ def index():
 
 @app.route('/favicon.ico')
 def favicon():
-    return '', 204
+    return app.send_static_file('favicon.svg')
+
+@app.route('/favicon.svg')
+def favicon_svg():
+    return app.send_static_file('favicon.svg')
+
+@app.route('/apple-touch-icon.svg')
+def apple_touch_icon():
+    return app.send_static_file('apple-touch-icon.svg')
+
+@app.route('/manifest.json')
+def manifest():
+    return app.send_static_file('manifest.json')
 
 @app.route('/login')
 def login():
