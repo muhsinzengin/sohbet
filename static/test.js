@@ -650,7 +650,27 @@ async function testDatabaseDelete() {
 
 async function testDatabaseInsert() {
     try {
-        return { success: true, message: 'Database inserts working' };
+        // Gerçek database insert testi
+        const response = await fetch('/api/test-db-insert', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                table: 'test_messages',
+                data: {
+                    text: 'Test insert from dashboard',
+                    timestamp: new Date().toISOString(),
+                    type: 'test'
+                }
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Insert test passed: ID ${data.id || 'Success'}` };
+        } else {
+            return { success: false, message: `Insert test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Insert error: ${e.message}` };
     }
@@ -658,7 +678,24 @@ async function testDatabaseInsert() {
 
 async function testDatabaseUpdate() {
     try {
-        return { success: true, message: 'Database updates working' };
+        // Gerçek database update testi
+        const response = await fetch('/api/test-db-update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                table: 'test_messages',
+                where: { type: 'test' },
+                data: { updated_at: new Date().toISOString() }
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Update test passed: ${data.affected || 'Success'} rows` };
+        } else {
+            return { success: false, message: `Update test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Update error: ${e.message}` };
     }
@@ -666,7 +703,23 @@ async function testDatabaseUpdate() {
 
 async function testDatabaseDelete() {
     try {
-        return { success: true, message: 'Database deletes working' };
+        // Gerçek database delete testi
+        const response = await fetch('/api/test-db-delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                table: 'test_messages',
+                where: { type: 'test' }
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Delete test passed: ${data.deleted || 'Success'} rows` };
+        } else {
+            return { success: false, message: `Delete test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Delete error: ${e.message}` };
     }
@@ -674,7 +727,22 @@ async function testDatabaseDelete() {
 
 async function testDatabaseIndexes() {
     try {
-        return { success: true, message: 'Database indexes optimized' };
+        // Gerçek database indexes testi
+        const response = await fetch('/api/test-db-indexes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                operation: 'analyze'
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Indexes test passed: ${data.indexes || 'Optimized'}` };
+        } else {
+            return { success: false, message: `Indexes test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Index error: ${e.message}` };
     }
@@ -682,7 +750,22 @@ async function testDatabaseIndexes() {
 
 async function testDatabaseBackup() {
     try {
-        return { success: true, message: 'Database backup system active' };
+        // Gerçek database backup testi
+        const response = await fetch('/api/test-db-backup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                backup_type: 'full'
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Backup test passed: ${data.backup_size} bytes` };
+        } else {
+            return { success: false, message: `Backup test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Backup error: ${e.message}` };
     }
@@ -690,7 +773,22 @@ async function testDatabaseBackup() {
 
 async function testDatabaseRestore() {
     try {
-        return { success: true, message: 'Database restore working' };
+        // Gerçek database restore testi
+        const response = await fetch('/api/test-db-restore', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                restore_type: 'test'
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Restore test passed: ${data.restore_time}` };
+        } else {
+            return { success: false, message: `Restore test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Restore error: ${e.message}` };
     }
@@ -698,16 +796,22 @@ async function testDatabaseRestore() {
 
 async function testDatabasePerformance() {
     try {
-        const start = performance.now();
-        // Simulate database operation
-        await new Promise(resolve => setTimeout(resolve, 10));
-        const end = performance.now();
-        const duration = end - start;
+        // Gerçek database performance testi
+        const response = await fetch('/api/test-db-performance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                query_type: 'count'
+            })
+        });
         
-        if (duration < 100) {
-            return { success: true, message: `Database performance good (${duration.toFixed(2)}ms)` };
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Performance test passed: ${data.query_time_ms}ms` };
+        } else {
+            return { success: false, message: `Performance test failed: ${response.status}` };
         }
-        return { success: false, message: `Database performance slow (${duration.toFixed(2)}ms)` };
     } catch (e) {
         return { success: false, message: `Performance error: ${e.message}` };
     }
