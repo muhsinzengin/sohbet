@@ -1,5 +1,0 @@
-# Render.com manuel deploy için bu dosya kullanılmayacak
-# Bunun yerine dashboard'dan manuel olarak oluşturacağız:
-# 1. PostgreSQL database (ücretsiz)
-# 2. Web Service (ücretsiz tier)
-# 3. Environment variables manuel ekleme

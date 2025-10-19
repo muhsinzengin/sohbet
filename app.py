@@ -10,8 +10,6 @@ from flask_socketio import SocketIO, emit, join_room
 from werkzeug.utils import secure_filename
 from config import Config
 from database import db
-from message_search import add_search_routes
-from backup_restore import BackupManager
 
 # Logging setup
 logging.basicConfig(
@@ -597,59 +595,7 @@ def clear_all():
     db.execute_query('DELETE FROM telegram_inbound', fetch=None)
     return jsonify({'success': True})
 
-# Backup ve Restore API'leri
-@app.route('/api/backup/create', methods=['POST'])
-def create_backup_api():
-    if not session.get('admin'):
-        return jsonify({'error': 'Unauthorized'}), 401
 
-    try:
-        manager = BackupManager()
-        backup_path = manager.create_backup()
-        if backup_path:
-            return jsonify({
-                'success': True,
-                'backup_path': backup_path,
-                'size_mb': os.path.getsize(backup_path) / 1024 / 1024
-            })
-        else:
-            return jsonify({'error': 'Backup oluşturulamadı'}), 500
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/backup/list', methods=['GET'])
-def list_backups_api():
-    if not session.get('admin'):
-        return jsonify({'error': 'Unauthorized'}), 401
-
-    try:
-        manager = BackupManager()
-        backups = manager.list_backups()
-        return jsonify(backups)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/backup/restore', methods=['POST'])
-def restore_backup_api():
-    if not session.get('admin'):
-        return jsonify({'error': 'Unauthorized'}), 401
-
-    backup_file = request.json.get('backup_file')
-    if not backup_file:
-        return jsonify({'error': 'Backup dosyası belirtilmedi'}), 400
-
-    try:
-        manager = BackupManager()
-        success = manager.restore_backup(backup_file)
-        if success:
-            return jsonify({'success': True, 'message': 'Geri yükleme başarılı'})
-        else:
-            return jsonify({'error': 'Geri yükleme başarısız'}), 500
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# Search route'larını ekle
-add_search_routes(app)
 
 # Socket.IO
 @socketio.on('join')
