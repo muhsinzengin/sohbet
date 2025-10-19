@@ -948,7 +948,18 @@ async function testTelegramToken() {
 
 async function testTelegramConnection() {
     try {
-        return { success: true, message: 'Telegram connection established' };
+        const response = await fetch('/api/test-telegram-connection', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ test: true })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: data.success, message: data.message };
+        } else {
+            return { success: false, message: `Connection test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Telegram connection error: ${e.message}` };
     }
@@ -956,7 +967,18 @@ async function testTelegramConnection() {
 
 async function testTelegramSend() {
     try {
-        return { success: true, message: 'Telegram send functionality working' };
+        const response = await fetch('/api/test-telegram-send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ test: true })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: data.success, message: data.message };
+        } else {
+            return { success: false, message: `Send test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Telegram send error: ${e.message}` };
     }
@@ -964,7 +986,18 @@ async function testTelegramSend() {
 
 async function testTelegramReceive() {
     try {
-        return { success: true, message: 'Telegram receive functionality working' };
+        const response = await fetch('/api/test-telegram-receive', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ test: true })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: data.success, message: data.message };
+        } else {
+            return { success: false, message: `Receive test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Telegram receive error: ${e.message}` };
     }
@@ -972,7 +1005,18 @@ async function testTelegramReceive() {
 
 async function testTelegramWebhook() {
     try {
-        return { success: true, message: 'Telegram webhook configured' };
+        const response = await fetch('/api/test-telegram-webhook', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ test: true })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: data.success, message: data.message };
+        } else {
+            return { success: false, message: `Webhook test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Webhook error: ${e.message}` };
     }
@@ -980,7 +1024,18 @@ async function testTelegramWebhook() {
 
 async function testTelegramOTP() {
     try {
-        return { success: true, message: 'Telegram OTP system working' };
+        const response = await fetch('/api/test-telegram-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ test: true })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: data.success, message: data.message };
+        } else {
+            return { success: false, message: `OTP test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `OTP error: ${e.message}` };
     }
@@ -988,7 +1043,18 @@ async function testTelegramOTP() {
 
 async function testTelegramCommands() {
     try {
-        return { success: true, message: 'Telegram commands working' };
+        const response = await fetch('/api/test-telegram-commands', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ test: true })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: data.success, message: data.message };
+        } else {
+            return { success: false, message: `Commands test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Commands error: ${e.message}` };
     }
@@ -996,7 +1062,18 @@ async function testTelegramCommands() {
 
 async function testTelegramInline() {
     try {
-        return { success: true, message: 'Telegram inline queries working' };
+        const response = await fetch('/api/test-telegram-inline', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ test: true })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: data.success, message: data.message };
+        } else {
+            return { success: false, message: `Inline test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Inline error: ${e.message}` };
     }
@@ -1004,7 +1081,18 @@ async function testTelegramInline() {
 
 async function testTelegramCallback() {
     try {
-        return { success: true, message: 'Telegram callbacks working' };
+        const response = await fetch('/api/test-telegram-callback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ test: true })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: data.success, message: data.message };
+        } else {
+            return { success: false, message: `Callback test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Callback error: ${e.message}` };
     }
@@ -1012,7 +1100,18 @@ async function testTelegramCallback() {
 
 async function testTelegramMedia() {
     try {
-        return { success: true, message: 'Telegram media handling working' };
+        const response = await fetch('/api/test-telegram-media', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ test: true })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: data.success, message: data.message };
+        } else {
+            return { success: false, message: `Media test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Media error: ${e.message}` };
     }
@@ -1020,7 +1119,18 @@ async function testTelegramMedia() {
 
 async function testTelegramErrorHandling() {
     try {
-        return { success: true, message: 'Telegram error handling working' };
+        const response = await fetch('/api/test-telegram-error', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ test: true })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: data.success, message: data.message };
+        } else {
+            return { success: false, message: `Error handling test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Error handling error: ${e.message}` };
     }
@@ -1028,7 +1138,18 @@ async function testTelegramErrorHandling() {
 
 async function testTelegramRateLimit() {
     try {
-        return { success: true, message: 'Telegram rate limiting working' };
+        const response = await fetch('/api/test-telegram-rate-limit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ test: true })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: data.success, message: data.message };
+        } else {
+            return { success: false, message: `Rate limit test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Rate limit error: ${e.message}` };
     }
@@ -1036,7 +1157,18 @@ async function testTelegramRateLimit() {
 
 async function testTelegramSecurity() {
     try {
-        return { success: true, message: 'Telegram security measures active' };
+        const response = await fetch('/api/test-telegram-security', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ test: true })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: data.success, message: data.message };
+        } else {
+            return { success: false, message: `Security test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Security error: ${e.message}` };
     }
@@ -1044,7 +1176,18 @@ async function testTelegramSecurity() {
 
 async function testTelegramLogging() {
     try {
-        return { success: true, message: 'Telegram logging working' };
+        const response = await fetch('/api/test-telegram-logging', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ test: true })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: data.success, message: data.message };
+        } else {
+            return { success: false, message: `Logging test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Logging error: ${e.message}` };
     }
@@ -1052,7 +1195,18 @@ async function testTelegramLogging() {
 
 async function testTelegramMonitoring() {
     try {
-        return { success: true, message: 'Telegram monitoring active' };
+        const response = await fetch('/api/test-telegram-monitoring', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ test: true })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: data.success, message: data.message };
+        } else {
+            return { success: false, message: `Monitoring test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Monitoring error: ${e.message}` };
     }
