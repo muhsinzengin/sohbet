@@ -54,7 +54,7 @@
         <div class="test-card" data-category="messages">
             <div class="card-header" onclick="toggleCard(this)">
                 <div class="card-title">
-                    <span class="card-icon">📨</span>
+                    <div class="card-icon-box">📨</div>
                     <span class="card-name">Messages</span>
                 </div>
                 <div class="card-score">
@@ -63,6 +63,9 @@
                 <div class="card-toggle">▼</div>
             </div>
             <div class="card-content">
+                <div class="test-description">
+                    <p>Mesajlaşma sistemi testleri: Socket.IO bağlantısı, mesaj gönderme/alma, dosya yükleme, emoji desteği, mesaj şifreleme</p>
+                </div>
                 <div class="test-list" id="msgTests"></div>
             </div>
         </div>
@@ -71,7 +74,7 @@
         <div class="test-card" data-category="database">
             <div class="card-header" onclick="toggleCard(this)">
                 <div class="card-title">
-                    <span class="card-icon">🗄️</span>
+                    <div class="card-icon-box">🗄️</div>
                     <span class="card-name">Database</span>
                 </div>
                 <div class="card-score">
@@ -80,6 +83,9 @@
                 <div class="card-toggle">▼</div>
             </div>
             <div class="card-content">
+                <div class="test-description">
+                    <p>Veritabanı testleri: PostgreSQL bağlantısı, SQLite fallback, tablo yapısı, index kontrolü, performans testleri</p>
+                </div>
                 <div class="test-list" id="dbTests"></div>
             </div>
         </div>
@@ -88,7 +94,7 @@
         <div class="test-card" data-category="telegram">
             <div class="card-header" onclick="toggleCard(this)">
                 <div class="card-title">
-                    <span class="card-icon">📱</span>
+                    <div class="card-icon-box">📱</div>
                     <span class="card-name">Telegram</span>
                 </div>
                 <div class="card-score">
@@ -97,6 +103,9 @@
                 <div class="card-toggle">▼</div>
             </div>
             <div class="card-content">
+                <div class="test-description">
+                    <p>Telegram bot testleri: Bot token kontrolü, mesaj gönderme, OTP sistemi, webhook bağlantısı, hata yönetimi</p>
+                </div>
                 <div class="test-list" id="tgTests"></div>
             </div>
         </div>
@@ -105,7 +114,7 @@
         <div class="test-card" data-category="socket">
             <div class="card-header" onclick="toggleCard(this)">
                 <div class="card-title">
-                    <span class="card-icon">🔌</span>
+                    <div class="card-icon-box">🔌</div>
                     <span class="card-name">Socket.IO</span>
                 </div>
                 <div class="card-score">
@@ -114,6 +123,9 @@
                 <div class="card-toggle">▼</div>
             </div>
             <div class="card-content">
+                <div class="test-description">
+                    <p>Socket.IO testleri: WebSocket bağlantısı, ping/pong, reconnection, event handling, CORS kontrolü</p>
+                </div>
                 <div class="test-list" id="socketTests"></div>
             </div>
         </div>
@@ -122,7 +134,7 @@
         <div class="test-card" data-category="cloudinary">
             <div class="card-header" onclick="toggleCard(this)">
                 <div class="card-title">
-                    <span class="card-icon">☁️</span>
+                    <div class="card-icon-box">☁️</div>
                     <span class="card-name">Cloudinary</span>
                 </div>
                 <div class="card-score">
@@ -131,6 +143,9 @@
                 <div class="card-toggle">▼</div>
             </div>
             <div class="card-content">
+                <div class="test-description">
+                    <p>Cloudinary testleri: API key kontrolü, resim yükleme, URL oluşturma, transformasyon, hata yönetimi</p>
+                </div>
                 <div class="test-list" id="cloudTests"></div>
             </div>
         </div>
@@ -139,7 +154,7 @@
         <div class="test-card" data-category="security">
             <div class="card-header" onclick="toggleCard(this)">
                 <div class="card-title">
-                    <span class="card-icon">🔒</span>
+                    <div class="card-icon-box">🔒</div>
                     <span class="card-name">Security</span>
                 </div>
                 <div class="card-score">
@@ -148,6 +163,9 @@
                 <div class="card-toggle">▼</div>
             </div>
             <div class="card-content">
+                <div class="test-description">
+                    <p>Güvenlik testleri: CSRF koruması, XSS koruması, input validation, path traversal, encryption kontrolü</p>
+                </div>
                 <div class="test-list" id="secTests"></div>
             </div>
         </div>
@@ -156,7 +174,7 @@
         <div class="test-card" data-category="performance">
             <div class="card-header" onclick="toggleCard(this)">
                 <div class="card-title">
-                    <span class="card-icon">⚡</span>
+                    <div class="card-icon-box">⚡</div>
                     <span class="card-name">Performance</span>
                 </div>
                 <div class="card-score">
@@ -165,6 +183,9 @@
                 <div class="card-toggle">▼</div>
             </div>
             <div class="card-content">
+                <div class="test-description">
+                    <p>Performans testleri: Response time, memory usage, database query time, cache efficiency, load testing</p>
+                </div>
                 <div class="test-list" id="perfTests"></div>
             </div>
         </div>
@@ -173,7 +194,7 @@
         <div class="test-card" data-category="ui">
             <div class="card-header" onclick="toggleCard(this)">
                 <div class="card-title">
-                    <span class="card-icon">🎨</span>
+                    <div class="card-icon-box">🎨</div>
                     <span class="card-name">UI/UX</span>
                 </div>
                 <div class="card-score">
@@ -182,6 +203,9 @@
                 <div class="card-toggle">▼</div>
             </div>
             <div class="card-content">
+                <div class="test-description">
+                    <p>UI/UX testleri: Responsive design, touch targets, accessibility, color contrast, font readability</p>
+                </div>
                 <div class="test-list" id="uiTests"></div>
             </div>
         </div>
@@ -190,7 +214,7 @@
         <div class="test-card" data-category="mobile">
             <div class="card-header" onclick="toggleCard(this)">
                 <div class="card-title">
-                    <span class="card-icon">📱</span>
+                    <div class="card-icon-box">📱</div>
                     <span class="card-name">Mobile</span>
                 </div>
                 <div class="card-score">
@@ -199,6 +223,9 @@
                 <div class="card-toggle">▼</div>
             </div>
             <div class="card-content">
+                <div class="test-description">
+                    <p>Mobil testler: Touch events, viewport meta, PWA support, mobile performance, orientation changes</p>
+                </div>
                 <div class="test-list" id="mobileTests"></div>
             </div>
         </div>
@@ -207,7 +234,7 @@
         <div class="test-card" data-category="railway">
             <div class="card-header" onclick="toggleCard(this)">
                 <div class="card-title">
-                    <span class="card-icon">🚀</span>
+                    <div class="card-icon-box">🚀</div>
                     <span class="card-name">Railway</span>
                 </div>
                 <div class="card-score">
@@ -216,6 +243,9 @@
                 <div class="card-toggle">▼</div>
             </div>
             <div class="card-content">
+                <div class="test-description">
+                    <p>Railway deployment testleri: Environment variables, database connection, build process, health checks, scaling</p>
+                </div>
                 <div class="test-list" id="railwayTests"></div>
             </div>
         </div>

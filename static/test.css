@@ -537,29 +537,42 @@ canvas {
 .card-title {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
-.card-icon {
+.card-icon-box {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(45deg, #0f3460, #533483);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
 }
 
 .card-name {
     font-size: 16px;
     font-weight: 600;
+    flex: 1;
 }
 
 .card-score {
     background: rgba(255, 255, 255, 0.1);
-    padding: 6px 10px;
+    padding: 6px 12px;
     border-radius: 8px;
     font-size: 12px;
     font-weight: 600;
+    margin-right: 8px;
+    flex-shrink: 0;
 }
 
 .card-toggle {
     font-size: 14px;
     transition: transform 0.3s ease;
+    flex-shrink: 0;
 }
 
 .card-header.active .card-toggle {
@@ -573,6 +586,21 @@ canvas {
 
 .card-content.show {
     display: block;
+}
+
+.test-description {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border-left: 4px solid #00ff88;
+}
+
+.test-description p {
+    font-size: 12px;
+    color: #ccc;
+    margin: 0;
+    line-height: 1.4;
 }
 
 .test-list {
