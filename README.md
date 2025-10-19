@@ -10,7 +10,7 @@ Modern, gerçek zamanlı chat uygulaması - Telegram OTP entegrasyonlu + Enterpr
 - ✅ Dosya yükleme (resim, ses)
 - ✅ Cloudinary entegrasyonu
 - ✅ Mobile-first responsive tasarım
-- ✅ Railway/Render/Vercel deployment ready
+- ✅ Railway deployment ready
 - ✅ XSS koruması ve rate limiting
 - ✅ Cache sistemi ile performans optimizasyonu
 - ✅ **Enterprise Test Dashboard (120 test + 50 auto-fix)**
@@ -60,9 +60,6 @@ railway variables set CLOUDINARY_API_SECRET=your_api_secret
 # Deploy
 railway up
 ```
-
-### Render
-Render için `render.yaml` hazır. Environment variables ekle ve deploy et.
 
 ### Vercel
 Vercel için `vercel.json` ve `api/app.py` hazır. Environment variables ekle ve deploy et.
