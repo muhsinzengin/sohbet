@@ -538,6 +538,7 @@ canvas {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex: 1;
 }
 
 .card-icon-box {
@@ -559,13 +560,18 @@ canvas {
     flex: 1;
 }
 
+.card-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .card-score {
     background: rgba(255, 255, 255, 0.1);
     padding: 6px 12px;
     border-radius: 8px;
     font-size: 12px;
     font-weight: 600;
-    margin-right: 8px;
     flex-shrink: 0;
 }
 
@@ -896,22 +902,96 @@ canvas {
     transform: scale(0.95);
 }
 
-/* Print Styles */
-@media print {
-    body {
-        background: white !important;
-        color: black !important;
-    }
-    
-    .modal {
-        display: none !important;
-    }
-    
-    .test-btn, .repair-btn {
-        display: none !important;
-    }
-    
-    .fab-container {
-        display: none !important;
-    }
+/* Error Logs Section */
+.logs-section {
+    background: #16213e;
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.logs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #333;
+}
+
+.logs-header h3 {
+    font-size: 16px;
+    margin: 0;
+    color: white;
+}
+
+.clear-logs-btn {
+    background: #ff4444;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.clear-logs-btn:hover {
+    background: #ff6666;
+}
+
+.logs-container {
+    max-height: 200px;
+    overflow-y: auto;
+    background: #0f1a2e;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.log-entry {
+    display: flex;
+    gap: 10px;
+    padding: 4px 0;
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+
+.log-time {
+    color: #999;
+    flex-shrink: 0;
+    min-width: 70px;
+}
+
+.log-level {
+    font-weight: 600;
+    flex-shrink: 0;
+    min-width: 50px;
+}
+
+.log-message {
+    color: #ccc;
+    flex: 1;
+    word-wrap: break-word;
+}
+
+.log-entry.info .log-level {
+    color: #00aaff;
+}
+
+.log-entry.warning .log-level {
+    color: #ffaa00;
+}
+
+.log-entry.error .log-level {
+    color: #ff4444;
+}
+
+.log-entry.success .log-level {
+    color: #00ff88;
 }

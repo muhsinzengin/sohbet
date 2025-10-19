@@ -14,9 +14,59 @@ let testResults = {
     total: 0
 };
 
+let testTotals = {
+    messages: 0,
+    database: 0,
+    telegram: 0,
+    socket: 0,
+    cloudinary: 0,
+    security: 0,
+    performance: 0,
+    ui: 0,
+    mobile: 0,
+    railway: 0,
+    total: 0
+};
+
 let isRunning = false;
 let currentTestIndex = 0;
-let totalTests = 150;
+let totalTests = 0;
+
+// Log system
+function addLog(level, message) {
+    const logsContainer = document.getElementById('logsContainer');
+    const logEntry = document.createElement('div');
+    logEntry.className = `log-entry ${level}`;
+    
+    const now = new Date();
+    const time = now.toLocaleTimeString();
+    
+    logEntry.innerHTML = `
+        <span class="log-time">[${time}]</span>
+        <span class="log-level">${level.toUpperCase()}</span>
+        <span class="log-message">${message}</span>
+    `;
+    
+    logsContainer.appendChild(logEntry);
+    logsContainer.scrollTop = logsContainer.scrollHeight;
+    
+    // Keep only last 50 logs
+    const logs = logsContainer.querySelectorAll('.log-entry');
+    if (logs.length > 50) {
+        logs[0].remove();
+    }
+}
+
+function clearLogs() {
+    const logsContainer = document.getElementById('logsContainer');
+    logsContainer.innerHTML = `
+        <div class="log-entry info">
+            <span class="log-time">[${new Date().toLocaleTimeString()}]</span>
+            <span class="log-level">INFO</span>
+            <span class="log-message">Logs cleared</span>
+        </div>
+    `;
+}
 
 // ============================================
 // REAL TEST FUNCTIONS (150 Tests)
@@ -1405,7 +1455,7 @@ const testCategories = {
         testDatabaseConnection, testDatabaseQuery, testDatabaseInsert, testDatabaseUpdate,
         testDatabaseDelete, testDatabaseIndexes, testDatabaseBackup, testDatabaseRestore,
         testDatabasePerformance, testDatabaseTransactions, testDatabaseConstraints,
-        testDatabaseTriggers, testDatabaseViews, testDatabaseReplication, testDatabaseConnection
+        testDatabaseTriggers, testDatabaseViews, testDatabaseReplication
     ],
     telegram: [
         testTelegramToken, testTelegramConnection, testTelegramSend, testTelegramReceive,
@@ -1487,6 +1537,23 @@ async function runAllTests() {
     runBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Running...</span>';
     repairBtn.disabled = true;
     
+    addLog('info', 'Starting test suite...');
+    
+    // Calculate total tests and update UI
+    totalTests = 0;
+    for (const [category, tests] of Object.entries(testCategories)) {
+        testTotals[category] = tests.length;
+        totalTests += tests.length;
+        
+        // Update total display
+        const totalElement = document.getElementById(`${category}Total`);
+        if (totalElement) {
+            totalElement.textContent = tests.length;
+        }
+    }
+    
+    addLog('info', `Total tests to run: ${totalTests}`);
+    
     // Reset results
     testResults = {
         messages: 0, database: 0, telegram: 0, socket: 0, cloudinary: 0,
@@ -1494,15 +1561,17 @@ async function runAllTests() {
     };
     
     currentTestIndex = 0;
-    totalTests = 150;
     
     // Run tests for each category
     for (const [category, tests] of Object.entries(testCategories)) {
+        addLog('info', `Running ${category} tests (${tests.length} tests)...`);
         await runCategoryTests(category, tests);
     }
     
     // Update final results
     updateSummary();
+    
+    addLog('success', `All tests completed! Total: ${testResults.total}/${totalTests}`);
     
     // Reset UI
     runBtn.innerHTML = '<span class="btn-icon">🚀</span><span class="btn-text">Run Tests</span>';
@@ -1541,9 +1610,11 @@ async function runCategoryTests(category, tests) {
                 testStatus.className = 'test-status pass';
                 testStatus.textContent = '✅';
                 passed++;
+                addLog('success', `${category}: ${test.name} - ${result.message}`);
             } else {
                 testStatus.className = 'test-status fail';
                 testStatus.textContent = '❌';
+                addLog('error', `${category}: ${test.name} - ${result.message}`);
             }
             
             // Add tooltip with result message
@@ -1552,6 +1623,7 @@ async function runCategoryTests(category, tests) {
             testStatus.className = 'test-status fail';
             testStatus.textContent = '❌';
             testItem.title = `Error: ${e.message}`;
+            addLog('error', `${category}: ${test.name} - Error: ${e.message}`);
         }
         
         // Update progress
@@ -1564,6 +1636,8 @@ async function runCategoryTests(category, tests) {
     
     testResults[category] = passed;
     scoreElement.textContent = passed;
+    
+    addLog('info', `${category} tests completed: ${passed}/${tests.length} passed`);
 }
 
 function updateProgress() {
@@ -1831,12 +1905,29 @@ document.addEventListener('DOMContentLoaded', function() {
         
         socket.on('connect', () => {
             console.log('Socket connected');
+            addLog('success', 'Socket.IO connected');
         });
         
         socket.on('disconnect', () => {
             console.log('Socket disconnected');
+            addLog('warning', 'Socket.IO disconnected');
         });
     }
+    
+    // Initialize test totals
+    totalTests = 0;
+    for (const [category, tests] of Object.entries(testCategories)) {
+        testTotals[category] = tests.length;
+        totalTests += tests.length;
+        
+        // Update total display
+        const totalElement = document.getElementById(`${category}Total`);
+        if (totalElement) {
+            totalElement.textContent = tests.length;
+        }
+    }
+    
+    addLog('info', `Test dashboard initialized with ${totalTests} total tests`);
     
     // Initialize chart
     updateChart();
