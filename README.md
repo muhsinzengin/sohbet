@@ -1,6 +1,6 @@
-# Flask Chat Uygulaması
+# Flask Chat Uygulaması v2.3
 
-Modern, gerçek zamanlı chat uygulaması - Telegram OTP entegrasyonlu
+Modern, gerçek zamanlı chat uygulaması - Telegram OTP entegrasyonlu + Enterprise Test Dashboard
 
 ## Özellikler
 
@@ -13,6 +13,7 @@ Modern, gerçek zamanlı chat uygulaması - Telegram OTP entegrasyonlu
 - ✅ Railway/Render/Vercel deployment ready
 - ✅ XSS koruması ve rate limiting
 - ✅ Cache sistemi ile performans optimizasyonu
+- ✅ **Enterprise Test Dashboard (120 test + 50 auto-fix)**
 
 ## Kurulum
 
@@ -31,6 +32,7 @@ python app.py
 
 - **Visitor**: http://localhost:5000
 - **Admin**: http://localhost:5000/login
+- **Test Dashboard**: http://localhost:5000/test (Admin only)
 
 ## Deployment
 
@@ -46,10 +48,14 @@ railway login
 railway init
 
 # Environment variables ayarla
+railway variables set SECRET_KEY=your-secret-key
+railway variables set ADMIN_USERNAME=admin
+railway variables set ADMIN_PASSWORD=your-password
 railway variables set TELEGRAM_BOT_TOKEN=your_token
-railway variables set TELEGRAM_ADMIN_ID=your_admin_id
-railway variables set CLOUDINARY_URL=your_cloudinary_url
-railway variables set DATABASE_URL=your_database_url
+railway variables set TELEGRAM_CHAT_ID=your_chat_id
+railway variables set CLOUDINARY_CLOUD_NAME=your_cloud_name
+railway variables set CLOUDINARY_API_KEY=your_api_key
+railway variables set CLOUDINARY_API_SECRET=your_api_secret
 
 # Deploy
 railway up
@@ -63,24 +69,29 @@ Vercel için `vercel.json` ve `api/app.py` hazır. Environment variables ekle ve
 
 ## Güvenlik
 
-- XSS koruması aktif
+- XSS koruması aktif (Bleach + escapeHtml)
+- CSRF koruması (Flask-WTF)
 - Rate limiting uygulanmış
 - Input validation
 - Güvenli session yönetimi
 - SQL injection koruması
+- Path traversal koruması
+- Log injection koruması
 
-## Test
+## Test Dashboard
+
+Enterprise-level test dashboard ile:
+- 120 comprehensive test (15 per category)
+- 50 auto-repair operations
+- Real-time monitoring
+- Mobile-optimized interface
 
 ```bash
-# Güvenlik testleri
-python test_security.py
+# Health check
+curl http://localhost:5000/health
 
-# API testleri
-python -c "
-import requests
-response = requests.get('http://localhost:5000/health')
-print(response.json())
-"
+# Test dashboard (admin only)
+# http://localhost:5000/test
 ```
 
 Detaylı dokümantasyon için `SYSTEM_DOCS/` klasörüne bakın.
