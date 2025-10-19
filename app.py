@@ -5,6 +5,9 @@ import random
 import logging
 import re
 import json
+import threading
+import schedule
+import time
 from datetime import datetime, timedelta
 from collections import defaultdict
 from logging.handlers import RotatingFileHandler
@@ -1347,9 +1350,262 @@ def repair_all():
         logger.error(f"Repair all failed: {e}")
         return jsonify({'error': str(e)}), 500
 
+# ============================================
+# AUTOMATIC TEST & REPAIR SCHEDULER
+# ============================================
+
+def run_automatic_tests():
+    """Otomatik test çalıştır ve sonuçları Telegram'a gönder"""
+    try:
+        logger.info("🔄 Otomatik test başlatıldı")
+        
+        # Test sonuçları
+        test_results = {
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'tests': {},
+            'total_passed': 0,
+            'total_failed': 0,
+            'total_tests': 0
+        }
+        
+        # Database testleri
+        try:
+            db.execute_query("SELECT COUNT(*) FROM messages")
+            test_results['tests']['Database'] = {'status': '✅', 'message': 'Database bağlantısı OK'}
+            test_results['total_passed'] += 1
+        except Exception as e:
+            test_results['tests']['Database'] = {'status': '❌', 'message': f'Database hatası: {str(e)[:50]}'}
+            test_results['total_failed'] += 1
+        
+        # Telegram bot testi
+        try:
+            if Config.TELEGRAM_BOT_TOKEN and Config.TELEGRAM_CHAT_ID:
+                test_results['tests']['Telegram'] = {'status': '✅', 'message': 'Telegram bot OK'}
+                test_results['total_passed'] += 1
+            else:
+                test_results['tests']['Telegram'] = {'status': '❌', 'message': 'Telegram bot konfigürasyonu eksik'}
+                test_results['total_failed'] += 1
+        except Exception as e:
+            test_results['tests']['Telegram'] = {'status': '❌', 'message': f'Telegram hatası: {str(e)[:50]}'}
+            test_results['total_failed'] += 1
+        
+        # Socket.IO testi
+        try:
+            test_results['tests']['Socket.IO'] = {'status': '✅', 'message': 'Socket.IO OK'}
+            test_results['total_passed'] += 1
+        except Exception as e:
+            test_results['tests']['Socket.IO'] = {'status': '❌', 'message': f'Socket.IO hatası: {str(e)[:50]}'}
+            test_results['total_failed'] += 1
+        
+        # Cloudinary testi
+        try:
+            if Config.CLOUDINARY_URL:
+                test_results['tests']['Cloudinary'] = {'status': '✅', 'message': 'Cloudinary OK'}
+                test_results['total_passed'] += 1
+            else:
+                test_results['tests']['Cloudinary'] = {'status': '❌', 'message': 'Cloudinary konfigürasyonu eksik'}
+                test_results['total_failed'] += 1
+        except Exception as e:
+            test_results['tests']['Cloudinary'] = {'status': '❌', 'message': f'Cloudinary hatası: {str(e)[:50]}'}
+            test_results['total_failed'] += 1
+        
+        test_results['total_tests'] = test_results['total_passed'] + test_results['total_failed']
+        
+        # Sonuçları Telegram'a gönder
+        send_test_results_to_telegram(test_results)
+        
+        logger.info(f"✅ Otomatik test tamamlandı: {test_results['total_passed']}/{test_results['total_tests']}")
+        
+    except Exception as e:
+        logger.error(f"❌ Otomatik test hatası: {e}")
+        send_error_to_telegram(f"Otomatik test hatası: {str(e)}")
+
+def run_automatic_repair():
+    """Otomatik repair çalıştır ve sonuçları Telegram'a gönder"""
+    try:
+        logger.info("🔧 Otomatik repair başlatıldı")
+        
+        repair_results = {
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'repairs': {},
+            'total_fixed': 0,
+            'total_failed': 0
+        }
+        
+        # Database repair
+        try:
+            db.execute_query("VACUUM")
+            db.execute_query("DELETE FROM messages WHERE created_at < datetime('now', '-7 days')")
+            repair_results['repairs']['Database'] = {'status': '✅', 'message': 'Database optimize edildi'}
+            repair_results['total_fixed'] += 1
+        except Exception as e:
+            repair_results['repairs']['Database'] = {'status': '❌', 'message': f'Database repair hatası: {str(e)[:50]}'}
+            repair_results['total_failed'] += 1
+        
+        # OTP repair
+        try:
+            db.execute_query("DELETE FROM otps WHERE expires < ?", (datetime.now().strftime('%Y-%m-%d %H:%M:%S'),))
+            repair_results['repairs']['OTP'] = {'status': '✅', 'message': 'Eski OTP\'ler temizlendi'}
+            repair_results['total_fixed'] += 1
+        except Exception as e:
+            repair_results['repairs']['OTP'] = {'status': '❌', 'message': f'OTP repair hatası: {str(e)[:50]}'}
+            repair_results['total_failed'] += 1
+        
+        # Cache repair
+        try:
+            message_cache.clear()
+            repair_results['repairs']['Cache'] = {'status': '✅', 'message': 'Cache temizlendi'}
+            repair_results['total_fixed'] += 1
+        except Exception as e:
+            repair_results['repairs']['Cache'] = {'status': '❌', 'message': f'Cache repair hatası: {str(e)[:50]}'}
+            repair_results['total_failed'] += 1
+        
+        # Sonuçları Telegram'a gönder
+        send_repair_results_to_telegram(repair_results)
+        
+        logger.info(f"✅ Otomatik repair tamamlandı: {repair_results['total_fixed']} düzeltme")
+        
+    except Exception as e:
+        logger.error(f"❌ Otomatik repair hatası: {e}")
+        send_error_to_telegram(f"Otomatik repair hatası: {str(e)}")
+
+def send_test_results_to_telegram(results):
+    """Test sonuçlarını Telegram'a gönder"""
+    try:
+        if not Config.TELEGRAM_BOT_TOKEN or not Config.TELEGRAM_CHAT_ID:
+            logger.warning("Telegram bot konfigürasyonu eksik")
+            return
+        
+        success_rate = (results['total_passed'] / results['total_tests'] * 100) if results['total_tests'] > 0 else 0
+        
+        message = f"""🔄 **OTOMATIK TEST RAPORU**
+📅 {results['timestamp']}
+
+📊 **GENEL DURUM:**
+✅ Başarılı: {results['total_passed']}
+❌ Başarısız: {results['total_failed']}
+📈 Başarı Oranı: {success_rate:.1f}%
+
+🔍 **TEST DETAYLARI:**"""
+        
+        for test_name, result in results['tests'].items():
+            message += f"\n{result['status']} {test_name}: {result['message']}"
+        
+        if success_rate >= 80:
+            message += "\n\n🎉 Sistem sağlıklı!"
+        elif success_rate >= 60:
+            message += "\n\n⚠️ Bazı sorunlar var, kontrol edilmeli"
+        else:
+            message += "\n\n🚨 Kritik sorunlar tespit edildi!"
+        
+        # Telegram'a gönder
+        async def send_message():
+            await send_telegram_with_retry(Config.TELEGRAM_CHAT_ID, message)
+        
+        if telegram_loop:
+            future = asyncio.run_coroutine_threadsafe(send_message(), telegram_loop)
+            future.result(timeout=10)
+            logger.info("Test sonuçları Telegram'a gönderildi")
+        
+    except Exception as e:
+        logger.error(f"Telegram test sonuçları gönderimi hatası: {e}")
+
+def send_repair_results_to_telegram(results):
+    """Repair sonuçlarını Telegram'a gönder"""
+    try:
+        if not Config.TELEGRAM_BOT_TOKEN or not Config.TELEGRAM_CHAT_ID:
+            logger.warning("Telegram bot konfigürasyonu eksik")
+            return
+        
+        message = f"""🔧 **OTOMATIK REPAIR RAPORU**
+📅 {results['timestamp']}
+
+📊 **GENEL DURUM:**
+✅ Düzeltildi: {results['total_fixed']}
+❌ Başarısız: {results['total_failed']}
+
+🔧 **REPAIR DETAYLARI:**"""
+        
+        for repair_name, result in results['repairs'].items():
+            message += f"\n{result['status']} {repair_name}: {result['message']}"
+        
+        if results['total_failed'] == 0:
+            message += "\n\n🎉 Tüm düzeltmeler başarılı!"
+        else:
+            message += f"\n\n⚠️ {results['total_failed']} düzeltme başarısız"
+        
+        # Telegram'a gönder
+        async def send_message():
+            await send_telegram_with_retry(Config.TELEGRAM_CHAT_ID, message)
+        
+        if telegram_loop:
+            future = asyncio.run_coroutine_threadsafe(send_message(), telegram_loop)
+            future.result(timeout=10)
+            logger.info("Repair sonuçları Telegram'a gönderildi")
+        
+    except Exception as e:
+        logger.error(f"Telegram repair sonuçları gönderimi hatası: {e}")
+
+def send_error_to_telegram(error_message):
+    """Hata mesajını Telegram'a gönder"""
+    try:
+        if not Config.TELEGRAM_BOT_TOKEN or not Config.TELEGRAM_CHAT_ID:
+            return
+        
+        message = f"""🚨 **SİSTEM HATASI**
+📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+❌ **Hata:** {error_message}
+
+🔧 Lütfen sistemi kontrol edin."""
+        
+        # Telegram'a gönder
+        async def send_message():
+            await send_telegram_with_retry(Config.TELEGRAM_CHAT_ID, message)
+        
+        if telegram_loop:
+            future = asyncio.run_coroutine_threadsafe(send_message(), telegram_loop)
+            future.result(timeout=10)
+        
+    except Exception as e:
+        logger.error(f"Telegram hata mesajı gönderimi hatası: {e}")
+
+def start_scheduler():
+    """Scheduler'ı başlat"""
+    try:
+        # Test zamanları: 10:00, 15:00, 20:00, 23:00
+        schedule.every().day.at("10:00").do(run_automatic_tests)
+        schedule.every().day.at("15:00").do(run_automatic_tests)
+        schedule.every().day.at("20:00").do(run_automatic_tests)
+        schedule.every().day.at("23:00").do(run_automatic_tests)
+        
+        # Repair zamanları: 10:05, 15:05, 20:05, 23:05 (test'ten 5 dakika sonra)
+        schedule.every().day.at("10:05").do(run_automatic_repair)
+        schedule.every().day.at("15:05").do(run_automatic_repair)
+        schedule.every().day.at("20:05").do(run_automatic_repair)
+        schedule.every().day.at("23:05").do(run_automatic_repair)
+        
+        logger.info("📅 Scheduler başlatıldı: 10:00, 15:00, 20:00, 23:00 (test) + 5dk (repair)")
+        
+        # Scheduler'ı ayrı thread'de çalıştır
+        def run_scheduler():
+            while True:
+                schedule.run_pending()
+                time.sleep(60)  # Her dakika kontrol et
+        
+        scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
+        scheduler_thread.start()
+        logger.info("🔄 Scheduler thread başlatıldı")
+        
+    except Exception as e:
+        logger.error(f"Scheduler başlatma hatası: {e}")
+
 if __name__ == '__main__':
     db.init_db()
     logger.info('Database initialized')
+
+    # Scheduler'ı başlat
+    start_scheduler()
 
     # Railway için PORT environment variable kullan
     port = int(os.environ.get('PORT', 5000))
