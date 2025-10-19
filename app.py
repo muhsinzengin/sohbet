@@ -280,29 +280,29 @@ if Config.TELEGRAM_BOT_TOKEN:
         raise last_exc
     
     # Start telegram bot in background thread with reconnect
-    async def start_telegram_bot_async():
-        while True:
-            try:
-                logger.info('Telegram bot polling başlatılıyor...')
-                # PTB v20: run_polling yönetir (initialize/start/idling)
-                # Conflict hatasını önlemek için drop_pending_updates=True
-                telegram_app.run_polling(stop_signals=None, drop_pending_updates=True)
-            except Exception as e:
-                logger.error(f'Telegram bot bağlantı hatası: {e}')
-                logger.info('30 saniye sonra yeniden bağlanmaya çalışılacak...')
-                await asyncio.sleep(30)  # Non-blocking reconnect delay
-            except KeyboardInterrupt:
-                logger.info('Telegram bot durduruluyor...')
-                break
 
     def start_telegram_bot():
-        import asyncio
-        global telegram_loop
-        telegram_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(telegram_loop)
-
-        # Async fonksiyonu çalıştır
-        telegram_loop.run_until_complete(start_telegram_bot_async())
+        import threading
+        import time
+        
+        def run_bot():
+            while True:
+                try:
+                    logger.info('Telegram bot polling başlatılıyor...')
+                    # PTB v20: run_polling yönetir (initialize/start/idling)
+                    # Conflict hatasını önlemek için drop_pending_updates=True
+                    telegram_app.run_polling(stop_signals=None, drop_pending_updates=True)
+                except Exception as e:
+                    logger.error(f'Telegram bot bağlantı hatası: {e}')
+                    logger.info('30 saniye sonra yeniden bağlanmaya çalışılacak...')
+                    time.sleep(30)  # Blocking sleep for gevent compatibility
+                except KeyboardInterrupt:
+                    logger.info('Telegram bot durduruluyor...')
+                    break
+        
+        thread = threading.Thread(target=run_bot, daemon=True)
+        thread.start()
+        logger.info('Telegram bot started with reconnect capability')
 
     # Flask debug reloader ile çift instance oluşmasını engelle
     should_start_bot = Config.is_production() or (os.environ.get('WERKZEUG_RUN_MAIN') == 'true')
