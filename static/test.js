@@ -1445,19 +1445,19 @@ async function testUptime() {
 // ============================================
 
 const testCategories = {
-    messages: [
+    msg: [
         testSocketConnection, testMessageSend, testMessageReceive, testImageUpload, testAudioUpload,
         testMessageEncryption, testMessageValidation, testMessageLength, testMessageHistory,
         testMessageTimestamps, testMessageThreading, testMessageNotifications, testMessageSearch,
         testMessageFiltering, testMessageCleanup
     ],
-    database: [
+    db: [
         testDatabaseConnection, testDatabaseQuery, testDatabaseInsert, testDatabaseUpdate,
         testDatabaseDelete, testDatabaseIndexes, testDatabaseBackup, testDatabaseRestore,
         testDatabasePerformance, testDatabaseTransactions, testDatabaseConstraints,
         testDatabaseTriggers, testDatabaseViews, testDatabaseReplication
     ],
-    telegram: [
+    tg: [
         testTelegramToken, testTelegramConnection, testTelegramSend, testTelegramReceive,
         testTelegramWebhook, testTelegramOTP, testTelegramCommands, testTelegramInline,
         testTelegramCallback, testTelegramMedia, testTelegramErrorHandling, testTelegramRateLimit,
@@ -1469,20 +1469,20 @@ const testCategories = {
         testSocketBroadcast, testSocketNamespace, testSocketMiddleware, testSocketCompression,
         testSocketBinary, testSocketErrorHandling, testSocketPerformance
     ],
-    cloudinary: [
+    cloud: [
         testCloudinaryConfig, testCloudinaryUpload, testCloudinaryTransform, testCloudinaryCDN,
         testCloudinarySecurity, testCloudinaryOptimization, testCloudinaryWatermark,
         testCloudinaryFaceDetection, testCloudinaryVideo, testCloudinaryAnalytics,
         testCloudinaryBackup, testCloudinaryAPI, testCloudinaryWebhooks, testCloudinaryRateLimit,
         testCloudinaryErrorHandling
     ],
-    security: [
+    sec: [
         testCSRFProtection, testXSSProtection, testInputValidation, testPathTraversal,
         testSQLInjection, testEncryption, testAuthentication, testAuthorization,
         testSessionSecurity, testRateLimiting, testHTTPS, testHeaders, testCORS,
         testContentSecurityPolicy, testSecurityLogging
     ],
-    performance: [
+    perf: [
         testPageLoadTime, testMemoryUsage, testResponseTime, testDatabasePerformance,
         testCacheEfficiency, testImageOptimization, testCodeSplitting, testLazyLoading,
         testCompression, testCDN, testMinification, testBundleSize, testNetworkOptimization,
@@ -1547,12 +1547,8 @@ async function runAllTests() {
         
         // Update total display
         const totalElement = document.getElementById(`${category}Total`);
-        console.log(`RunAllTests - Looking for element: ${category}Total`, totalElement);
         if (totalElement) {
             totalElement.textContent = tests.length;
-            console.log(`RunAllTests - Updated ${category}Total to ${tests.length}`);
-        } else {
-            console.error(`RunAllTests - Element ${category}Total not found!`);
         }
     }
     
@@ -1560,8 +1556,8 @@ async function runAllTests() {
     
     // Reset results
     testResults = {
-        messages: 0, database: 0, telegram: 0, socket: 0, cloudinary: 0,
-        security: 0, performance: 0, ui: 0, mobile: 0, railway: 0, total: 0
+        msg: 0, db: 0, tg: 0, socket: 0, cloud: 0,
+        sec: 0, perf: 0, ui: 0, mobile: 0, railway: 0, total: 0
     };
     
     currentTestIndex = 0;
@@ -1926,12 +1922,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update total display
         const totalElement = document.getElementById(`${category}Total`);
-        console.log(`Looking for element: ${category}Total`, totalElement);
         if (totalElement) {
             totalElement.textContent = tests.length;
-            console.log(`Updated ${category}Total to ${tests.length}`);
-        } else {
-            console.error(`Element ${category}Total not found!`);
         }
     }
     
