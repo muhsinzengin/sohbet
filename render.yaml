@@ -1,33 +1,5 @@
-services:
-  - type: web
-    name: sohbet-app
-    env: python
-    region: frankfurt
-    plan: starter
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT app:app
-    envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: sohbet-db
-          property: connectionString
-      - key: SECRET_KEY
-        generateValue: true
-      - key: ENV
-        value: production
-      - key: TELEGRAM_BOT_TOKEN
-        value: 7801493894:AAHQTlDbrugF5Lb7bsYZc0sS5vEKGd-e-pc
-      - key: TELEGRAM_CHAT_ID
-        value: 123456789
-      - key: ADMIN_USERNAME
-        value: admin
-      - key: ADMIN_PASSWORD
-        generateValue: true
-      - key: CLOUDINARY_URL
-        value: cloudinary://977118918853874:Onba9gDpv-tutY_taeP3GZplI9k@dsi9scdpv
-
-databases:
-  - name: sohbet-db
-    databaseName: sohbetdb
-    user: sohbetuser
-    plan: starter
+# Render.com manuel deploy için bu dosya kullanılmayacak
+# Bunun yerine dashboard'dan manuel olarak oluşturacağız:
+# 1. PostgreSQL database (ücretsiz)
+# 2. Web Service (ücretsiz tier)
+# 3. Environment variables manuel ekleme
