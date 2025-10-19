@@ -2,55 +2,80 @@
   <!-- Background gradient -->
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#16213e;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#1a1a2e;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#0f0f23;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#764ba2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f093fb;stop-opacity:1" />
     </linearGradient>
     <linearGradient id="text" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#00ff88;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#00cc66;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f8f9fa;stop-opacity:1" />
     </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00d4aa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00a8cc;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
   
   <!-- Background -->
   <rect width="1200" height="630" fill="url(#bg)"/>
   
-  <!-- Decorative circles -->
-  <circle cx="100" cy="100" r="50" fill="#00ff88" opacity="0.1"/>
-  <circle cx="1100" cy="150" r="80" fill="#00ff88" opacity="0.1"/>
-  <circle cx="200" cy="500" r="60" fill="#00ff88" opacity="0.1"/>
-  <circle cx="1000" cy="500" r="70" fill="#00ff88" opacity="0.1"/>
+  <!-- Decorative elements -->
+  <circle cx="150" cy="150" r="100" fill="rgba(255,255,255,0.1)"/>
+  <circle cx="1050" cy="200" r="120" fill="rgba(255,255,255,0.08)"/>
+  <circle cx="200" cy="480" r="80" fill="rgba(255,255,255,0.06)"/>
+  <circle cx="1000" cy="480" r="90" fill="rgba(255,255,255,0.1)"/>
   
-  <!-- Main chat bubble -->
-  <path d="M300 200c0-20 16-36 36-36h528c20 0 36 16 36 36v200c0 20-16 36-36 36h-132l-90 90v-90H336c-20 0-36-16-36-36V200z" fill="#00ff88"/>
+  <!-- Main chat interface mockup -->
+  <rect x="200" y="150" width="800" height="400" rx="20" fill="rgba(255,255,255,0.95)" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
   
-  <!-- Message dots -->
-  <circle cx="450" cy="280" r="20" fill="#16213e"/>
-  <circle cx="550" cy="280" r="20" fill="#16213e"/>
-  <circle cx="650" cy="280" r="20" fill="#16213e"/>
+  <!-- Chat header -->
+  <rect x="200" y="150" width="800" height="60" rx="20" fill="url(#accent)"/>
+  <circle cx="250" cy="180" r="15" fill="rgba(255,255,255,0.9)"/>
+  <rect x="280" y="170" width="120" height="8" rx="4" fill="rgba(255,255,255,0.8)"/>
+  <rect x="280" y="185" width="80" height="6" rx="3" fill="rgba(255,255,255,0.6)"/>
+  
+  <!-- Chat messages -->
+  <rect x="250" y="250" width="300" height="40" rx="20" fill="#e3f2fd"/>
+  <rect x="250" y="300" width="200" height="40" rx="20" fill="#e3f2fd"/>
+  
+  <rect x="550" y="250" width="350" height="40" rx="20" fill="url(#accent)"/>
+  <rect x="550" y="300" width="280" height="40" rx="20" fill="url(#accent)"/>
+  
+  <!-- Typing indicator -->
+  <rect x="250" y="370" width="150" height="30" rx="15" fill="#f5f5f5"/>
+  <circle cx="270" cy="385" r="3" fill="#999"/>
+  <circle cx="285" cy="385" r="3" fill="#999"/>
+  <circle cx="300" cy="385" r="3" fill="#999"/>
   
   <!-- Main title -->
-  <text x="600" y="120" font-family="Arial, sans-serif" font-size="72" font-weight="bold" text-anchor="middle" fill="url(#text)">✨ Premium Sohbet</text>
+  <text x="600" y="100" font-family="Arial, sans-serif" font-size="64" font-weight="bold" text-anchor="middle" fill="url(#text)" filter="url(#glow)">✨ Premium Sohbet</text>
   
   <!-- Subtitle -->
-  <text x="600" y="180" font-family="Arial, sans-serif" font-size="36" text-anchor="middle" fill="#ffffff">%100 Güvenli</text>
+  <text x="600" y="580" font-family="Arial, sans-serif" font-size="32" text-anchor="middle" fill="rgba(255,255,255,0.9)">%100 Güvenli • SSL • 7/24 Destek</text>
   
-  <!-- Features -->
-  <text x="600" y="450" font-family="Arial, sans-serif" font-size="28" text-anchor="middle" fill="#ffffff">🔒 SSL • ✨ Premium • 🚀 Hızlı • 👨‍💼 7/24</text>
+  <!-- Features badges -->
+  <rect x="400" y="520" width="100" height="35" rx="17" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="450" y="540" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="white">🔒 SSL</text>
   
-  <!-- Bottom text -->
-  <text x="600" y="520" font-family="Arial, sans-serif" font-size="24" text-anchor="middle" fill="#00ff88">Adınızı girin → Uzman desteğe anında bağlanın!</text>
+  <rect x="520" y="520" width="120" height="35" rx="17" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="580" y="540" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="white">✨ Premium</text>
   
-  <!-- Security badges -->
-  <rect x="400" y="550" width="80" height="40" rx="20" fill="#00ff88" opacity="0.2"/>
-  <text x="440" y="575" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#00ff88">SSL</text>
+  <rect x="660" y="520" width="100" height="35" rx="17" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="710" y="540" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="white">🚀 Hızlı</text>
   
-  <rect x="500" y="550" width="100" height="40" rx="20" fill="#00ff88" opacity="0.2"/>
-  <text x="550" y="575" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#00ff88">Premium</text>
+  <rect x="780" y="520" width="100" height="35" rx="17" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="830" y="540" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="white">👨‍💼 7/24</text>
   
-  <rect x="620" y="550" width="80" height="40" rx="20" fill="#00ff88" opacity="0.2"/>
-  <text x="660" y="575" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#00ff88">Hızlı</text>
-  
-  <rect x="720" y="550" width="80" height="40" rx="20" fill="#00ff88" opacity="0.2"/>
-  <text x="760" y="575" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#00ff88">7/24</text>
+  <!-- Floating elements -->
+  <circle cx="100" cy="300" r="8" fill="rgba(255,255,255,0.6)"/>
+  <circle cx="1100" cy="350" r="6" fill="rgba(255,255,255,0.4)"/>
+  <circle cx="150" cy="400" r="10" fill="rgba(255,255,255,0.5)"/>
+  <circle cx="1050" cy="450" r="7" fill="rgba(255,255,255,0.3)"/>
 </svg>
