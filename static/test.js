@@ -1534,7 +1534,7 @@ async function runAllTests() {
     const runBtn = document.getElementById('runTestsBtn');
     const repairBtn = document.getElementById('repairBtn');
     
-    runBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Running...</span>';
+    runBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Test Ediliyor...</span>';
     repairBtn.disabled = true;
     
     addLog('info', 'Starting test suite...');
@@ -1574,7 +1574,7 @@ async function runAllTests() {
     addLog('success', `All tests completed! Total: ${testResults.total}/${totalTests}`);
     
     // Reset UI
-    runBtn.innerHTML = '<span class="btn-icon">🚀</span><span class="btn-text">Run Tests</span>';
+    runBtn.innerHTML = '<span class="btn-icon">🚀</span><span class="btn-text">TEST ET</span>';
     repairBtn.disabled = false;
     isRunning = false;
 }
@@ -1711,7 +1711,7 @@ async function runAutoRepair() {
     if (isRunning) return;
     
     const repairBtn = document.getElementById('repairBtn');
-    repairBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Repairing...</span>';
+    repairBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Düzeltiliyor...</span>';
     
     const modal = document.getElementById('repairModal');
     const repairList = document.getElementById('repairList');
@@ -1764,18 +1764,15 @@ async function runAutoRepair() {
         completed++;
         const progress = (completed / repairs.length) * 100;
         repairProgress.style.width = `${progress}%`;
-        repairText.textContent = `Repairing... ${completed}/${repairs.length}`;
+        repairText.textContent = `Düzeltiliyor... ${completed}/${repairs.length}`;
         
         await new Promise(resolve => setTimeout(resolve, 200));
     }
     
-    repairText.textContent = 'All repairs completed!';
-    repairBtn.innerHTML = '<span class="btn-icon">✅</span><span class="btn-text">Repaired!</span>';
+    repairText.textContent = 'Tüm düzeltmeler tamamlandı!';
+    repairBtn.innerHTML = '<span class="btn-icon">✅</span><span class="btn-text">DÜZELT</span>';
     
-    // Auto-run tests after repair
-    setTimeout(() => {
-        runAllTests();
-    }, 1000);
+    // Repair completed - user can manually run tests if needed
 }
 
 // Repair functions
@@ -1933,10 +1930,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize chart
     updateChart();
     
-    // Auto-run tests after 2 seconds
-    setTimeout(() => {
-        runAllTests();
-    }, 2000);
+    // Tests will run only when user clicks "TEST ET" button
 });
 
 // Close modal when clicking outside
