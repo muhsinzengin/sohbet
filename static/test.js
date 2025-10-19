@@ -819,7 +819,22 @@ async function testDatabasePerformance() {
 
 async function testDatabaseTransactions() {
     try {
-        return { success: true, message: 'Database transactions working' };
+        // Gerçek database transactions testi
+        const response = await fetch('/api/test-db-transactions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                operation: 'rollback_test'
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Transactions test passed: ${data.transaction_supported ? 'Supported' : 'Not supported'}` };
+        } else {
+            return { success: false, message: `Transactions test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Transaction error: ${e.message}` };
     }
@@ -827,7 +842,22 @@ async function testDatabaseTransactions() {
 
 async function testDatabaseConstraints() {
     try {
-        return { success: true, message: 'Database constraints enforced' };
+        // Gerçek database constraints testi
+        const response = await fetch('/api/test-db-constraints', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                table: 'messages'
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Constraints test passed: ${data.constraints} constraints` };
+        } else {
+            return { success: false, message: `Constraints test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Constraint error: ${e.message}` };
     }
@@ -835,7 +865,22 @@ async function testDatabaseConstraints() {
 
 async function testDatabaseTriggers() {
     try {
-        return { success: true, message: 'Database triggers active' };
+        // Gerçek database triggers testi
+        const response = await fetch('/api/test-db-triggers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                operation: 'list'
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Triggers test passed: ${data.triggers} triggers` };
+        } else {
+            return { success: false, message: `Triggers test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Trigger error: ${e.message}` };
     }
@@ -843,7 +888,22 @@ async function testDatabaseTriggers() {
 
 async function testDatabaseViews() {
     try {
-        return { success: true, message: 'Database views working' };
+        // Gerçek database views testi
+        const response = await fetch('/api/test-db-views', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                operation: 'list'
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Views test passed: ${data.views} views` };
+        } else {
+            return { success: false, message: `Views test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `View error: ${e.message}` };
     }
@@ -851,7 +911,22 @@ async function testDatabaseViews() {
 
 async function testDatabaseReplication() {
     try {
-        return { success: true, message: 'Database replication active' };
+        // Gerçek database replication testi
+        const response = await fetch('/api/test-db-replication', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                test: true,
+                replication_type: 'master_slave'
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return { success: true, message: `Replication test passed: ${data.replication_status}` };
+        } else {
+            return { success: false, message: `Replication test failed: ${response.status}` };
+        }
     } catch (e) {
         return { success: false, message: `Replication error: ${e.message}` };
     }
