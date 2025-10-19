@@ -1,5 +1,5 @@
 // 📱 MOBILE-FIRST TEST DASHBOARD JavaScript
-const socket = io();
+let socket;
 let testResults = {
     messages: 0,
     database: 0,
@@ -662,6 +662,25 @@ function scrollToTop() {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Socket.IO connection
+    if (typeof io !== 'undefined') {
+        socket = io();
+        
+        socket.on('connect', function() {
+            showNotification('Connected to server', 'success');
+        });
+
+        socket.on('disconnect', function() {
+            showNotification('Disconnected from server', 'error');
+        });
+
+        socket.on('connect_error', function() {
+            showNotification('Connection error', 'error');
+        });
+    } else {
+        console.warn('Socket.IO not available');
+    }
+    
     // Initialize empty test lists
     Object.keys(testConfig).forEach(category => {
         const container = document.getElementById(category + 'Tests');
@@ -684,14 +703,20 @@ document.addEventListener('DOMContentLoaded', function() {
 // SOCKET.IO EVENTS
 // ============================================
 
-socket.on('connect', function() {
-    showNotification('Connected to server', 'success');
-});
+function initializeSocket() {
+    if (typeof io !== 'undefined' && !socket) {
+        socket = io();
+        
+        socket.on('connect', function() {
+            showNotification('Connected to server', 'success');
+        });
 
-socket.on('disconnect', function() {
-    showNotification('Disconnected from server', 'error');
-});
+        socket.on('disconnect', function() {
+            showNotification('Disconnected from server', 'error');
+        });
 
-socket.on('connect_error', function() {
-    showNotification('Connection error', 'error');
-});
+        socket.on('connect_error', function() {
+            showNotification('Connection error', 'error');
+        });
+    }
+}
