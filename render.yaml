@@ -23,12 +23,8 @@ services:
         value: admin
       - key: ADMIN_PASSWORD
         generateValue: true
-      - key: CLOUDINARY_CLOUD_NAME
-        sync: false
-      - key: CLOUDINARY_API_KEY
-        sync: false
-      - key: CLOUDINARY_API_SECRET
-        sync: false
+      - key: CLOUDINARY_URL
+        value: cloudinary://977118918853874:Onba9gDpv-tutY_taeP3GZplI9k@dsi9scdpv
 
 databases:
   - name: sohbet-db
