@@ -1547,8 +1547,12 @@ async function runAllTests() {
         
         // Update total display
         const totalElement = document.getElementById(`${category}Total`);
+        console.log(`RunAllTests - Looking for element: ${category}Total`, totalElement);
         if (totalElement) {
             totalElement.textContent = tests.length;
+            console.log(`RunAllTests - Updated ${category}Total to ${tests.length}`);
+        } else {
+            console.error(`RunAllTests - Element ${category}Total not found!`);
         }
     }
     
@@ -1922,8 +1926,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update total display
         const totalElement = document.getElementById(`${category}Total`);
+        console.log(`Looking for element: ${category}Total`, totalElement);
         if (totalElement) {
             totalElement.textContent = tests.length;
+            console.log(`Updated ${category}Total to ${tests.length}`);
+        } else {
+            console.error(`Element ${category}Total not found!`);
         }
     }
     
