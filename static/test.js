@@ -1604,6 +1604,12 @@ async function runAllTests() {
         }
     }
     
+    // Manual total calculation fallback
+    if (totalTests === 0) {
+        totalTests = 15 + 14 + 15 + 15 + 15 + 15 + 15 + 15 + 15 + 15; // 149 total
+        console.log(`Manual totalTests calculation: ${totalTests}`);
+    }
+    
     addLog('info', `Total tests to run: ${totalTests} (Messages:15, Database:14, Telegram:15, Socket:15, Cloudinary:15, Security:15, Performance:15, UI:15, Mobile:15, Railway:15)`);
     
     // Reset results
@@ -1993,12 +1999,22 @@ document.addEventListener('DOMContentLoaded', function() {
         'railwayTotal': 15
     };
     
+    // Manual total calculation
+    totalTests = 15 + 14 + 15 + 15 + 15 + 15 + 15 + 15 + 15 + 15; // 149 total
+    
     for (const [id, count] of Object.entries(manualCounts)) {
         const element = document.getElementById(id);
         if (element) {
             element.textContent = count;
             console.log(`Manual set ${id} to ${count}`);
         }
+    }
+    
+    // Update total score display
+    const totalScoreElement = document.getElementById('totalScore');
+    if (totalScoreElement) {
+        totalScoreElement.textContent = '0';
+        console.log(`Updated totalScore to 0/${totalTests}`);
     }
     
     addLog('info', `Test dashboard initialized with ${totalTests} total tests`);
