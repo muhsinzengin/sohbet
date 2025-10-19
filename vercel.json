@@ -15,6 +15,11 @@
       "dest": "app.py"
     }
   ],
+  "functions": {
+    "app.py": {
+      "maxDuration": 30
+    }
+  },
   "env": {
     "ENV": "production"
   }
