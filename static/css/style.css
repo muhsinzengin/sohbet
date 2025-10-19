@@ -6,7 +6,8 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f0f5fa;
+    background: #f0f5fa !important;
+    background-color: #f0f5fa !important;
     color: #1a1a2e;
     overflow: hidden;
     height: 100vh;
@@ -554,7 +555,8 @@ body {
     display: flex;
     flex-direction: column;
     flex: 1;
-    background: #f0f5fa;
+    background: #f0f5fa !important;
+    background-color: #f0f5fa !important;
     position: relative;
     overflow: hidden;
 }
@@ -865,7 +867,8 @@ body {
     flex: 1;
     overflow-y: auto;
     padding: 16px;
-    background: #f0f5fa;
+    background: #f0f5fa !important;
+    background-color: #f0f5fa !important;
     min-height: 0;
 }
 
